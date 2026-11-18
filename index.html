@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bancada do Técnico</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,8 +37,10 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0}
+img{max-width:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.5}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
 h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.1;text-wrap:balance}
 h2{font-size:32px;font-weight:700;letter-spacing:.01em}
 h3{font-size:21px;font-weight:600;letter-spacing:.02em}
@@ -525,6 +527,9 @@ function route(){
   });
 }
 window.addEventListener('hashchange',route);
+document.querySelectorAll('[data-tab]').forEach(function(a){
+  a.addEventListener('click',function(ev){ev.preventDefault();var t=a.getAttribute('data-tab');if(location.hash!=='#'+t){try{history.replaceState(null,'','#'+t)}catch(e){location.hash=t}}route();window.scrollTo(0,0)});
+});
 route();
 
 document.querySelectorAll('[data-sub]').forEach(function(b){
