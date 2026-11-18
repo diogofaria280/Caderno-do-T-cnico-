@@ -1,0 +1,1010 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bancada do Técnico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: barra fixa com três menus no topo; cada menu abre uma bancada de cartões (calculadoras, tabelas, registos) em grelha que quebra para uma coluna no telemóvel. */
+:root{
+  --bg:#e8ecef;
+  --surface:#f7f9fa;
+  --ink:#14212b;
+  --muted:#55646f;
+  --line:#c5cfd6;
+  --accent:#b8400a;
+  --accent-ink:#ffffff;
+  --ok:#17744a;
+  --warn:#9a6700;
+  --bad:#b42318;
+  --font-display:'Barlow Condensed','Arial Narrow',sans-serif;
+  --font-body:'Barlow','Segoe UI',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12181d;--surface:#1a2229;--ink:#e6ecf0;--muted:#93a3af;--line:#2d3a43;
+    --accent:#f08a4b;--accent-ink:#1a1006;--ok:#4fc58a;--warn:#e3b341;--bad:#ff8a80;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12181d;--surface:#1a2229;--ink:#e6ecf0;--muted:#93a3af;--line:#2d3a43;
+  --accent:#f08a4b;--accent-ink:#1a1006;--ok:#4fc58a;--warn:#e3b341;--bad:#ff8a80;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.1;text-wrap:balance}
+h2{font-size:32px;font-weight:700;letter-spacing:.01em}
+h3{font-size:21px;font-weight:600;letter-spacing:.02em}
+p{margin:0}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.in,.page{max-width:1080px;margin-inline:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.in{padding-block:12px 0}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.brand svg{width:34px;height:34px;flex:none;color:var(--accent)}
+.brand h1{font-size:26px;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.brand p{font-size:13px;color:var(--muted)}
+.tabs{display:flex;gap:2px;overflow-x:auto}
+.tabs a{font-family:var(--font-display);font-size:20px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:8px 14px 7px;border-bottom:4px solid transparent;white-space:nowrap}
+.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs a:hover{color:var(--ink)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.page{padding-block:24px 64px}
+.panel{display:flex;flex-direction:column;gap:20px}
+.lead{color:var(--muted);max-width:68ch}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{font:600 15px var(--font-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:8px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.card>p.sub{color:var(--muted);font-size:14px}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.fields .full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label,.lbl{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input,select,textarea{font:500 16px var(--font-mono);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:9px 10px;width:100%;min-width:0}
+textarea{font-family:var(--font-body);resize:vertical;min-height:84px}
+select{font-family:var(--font-body)}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
+.btn{font:600 15px var(--font-body);background:var(--accent);color:var(--accent-ink);border:0;border-radius:4px;padding:10px 16px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.small{padding:6px 10px;font-size:13px}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid var(--bad)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.out{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:12px}
+.kv{margin:0;display:flex;flex-direction:column}
+.kv>div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:5px 0;border-bottom:1px solid var(--line)}
+.kv>div:last-child{border-bottom:0}
+.kv dt{color:var(--muted);font-size:14px}
+.kv dd{margin:0;font:600 17px var(--font-mono);text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kv .given dd{color:var(--accent)}
+.note{font-size:14px;padding:9px 12px;border-left:4px solid var(--line);background:var(--bg);border-radius:0 4px 4px 0}
+.note.ok{border-left-color:var(--ok)}
+.note.warn{border-left-color:var(--warn)}
+.note.bad{border-left-color:var(--bad)}
+.note strong{font-weight:600}
+.laws{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+.law{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.law .f{font:600 19px var(--font-mono);color:var(--accent);overflow-wrap:anywhere}
+.law p{font-size:14px;color:var(--muted)}
+.law h3{font-size:19px}
+.steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+.cols2{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.diagram{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+.diagram figure{margin:0;display:flex;flex-direction:column;gap:6px;align-items:center}
+.diagram figcaption{font-size:14px;color:var(--muted);text-align:center}
+.diagram svg{width:100%;max-width:270px;height:auto}
+svg .t{fill:var(--bg);stroke:var(--ink);stroke-width:2}
+svg .w{stroke:var(--accent);stroke-width:3;fill:none;stroke-linecap:round}
+svg .s{stroke:var(--ink);stroke-width:2;fill:none}
+svg text{fill:var(--ink);font:600 11px var(--font-mono)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td.m{font-family:var(--font-mono)}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.4);vertical-align:-2px;margin-right:8px}
+.bands{display:flex;flex-wrap:wrap;gap:8px}
+.bands span{display:inline-flex;align-items:center;font-size:14px;border:1px solid var(--line);border-radius:4px;padding:3px 8px;background:var(--bg)}
+.resvg{width:100%;max-width:340px;height:auto;align-self:center}
+.result-cards{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.rc{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.rc .k{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rc .v{font:600 28px var(--font-mono);color:var(--accent);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.rc .d{font-size:13px;color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{font:500 14px var(--font-mono);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:5px 10px;cursor:pointer}
+.chip{display:inline-block;font-size:12px;font-weight:600;border-radius:3px;padding:2px 7px;border:1px solid var(--line);background:var(--bg)}
+.chip.ok{color:var(--ok);border-color:var(--ok)}
+.chip.warn{color:var(--warn);border-color:var(--warn)}
+.chip.bad{color:var(--bad);border-color:var(--bad)}
+.entry{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.entry .top{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;justify-content:space-between}
+.entry .eq{font:600 22px var(--font-display);letter-spacing:.02em}
+.entry .dt{font:500 13px var(--font-mono);color:var(--muted)}
+.entry .meta{display:flex;gap:6px;flex-wrap:wrap}
+.entry .desc{white-space:pre-wrap;overflow-wrap:anywhere}
+.entry .ex{font-size:14px;color:var(--muted);overflow-wrap:anywhere}
+.stats{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.stat{border:1px solid var(--line);border-radius:6px;padding:10px 14px;background:var(--surface)}
+.stat b{display:block;font:600 26px var(--font-mono);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.empty{border:1px dashed var(--line);border-radius:6px;padding:28px 18px;text-align:center;color:var(--muted)}
+details.card summary{cursor:pointer;font:600 18px var(--font-display);letter-spacing:.03em}
+.foot{font-size:13px;color:var(--muted);max-width:72ch}
+@media (max-width:520px){
+  h2{font-size:28px}
+  .fields{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+
+</head>
+<body>
+<div class="bar"><div class="in">
+  <div class="brand">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><polygon points="20,3 35,11.5 35,28.5 20,37 5,28.5 5,11.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><circle cx="20" cy="20" r="7" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+    <div><h1>Bancada do Técnico</h1><p>Apoio à decisão em manutenção industrial</p></div>
+  </div>
+  <nav class="tabs" aria-label="Menus">
+    <a href="#eletricidade" data-tab="eletricidade">Eletricidade</a>
+    <a href="#serralharia" data-tab="serralharia">Serralharia</a>
+    <a href="#livro" data-tab="livro">Livro do Operário</a>
+  </nav>
+</div></div>
+
+<main class="page">
+
+<!-- ===================== ELETRICIDADE ===================== -->
+<section id="p-eletricidade" class="panel" hidden>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <h2>Eletricidade</h2>
+    <p class="lead">Calculadoras que respondem à medida que escreves, as leis que mais se usam na oficina, o arranque estrela-triângulo e o código de cores das resistências. Os valores iniciais são exemplos, altera-os.</p>
+  </div>
+  <div class="seg" role="group" aria-label="Secções de eletricidade">
+    <button type="button" data-sub="calc" aria-pressed="true">Calculadoras</button>
+    <button type="button" data-sub="leis" aria-pressed="false">Leis</button>
+    <button type="button" data-sub="yd" aria-pressed="false">Estrela-triângulo</button>
+    <button type="button" data-sub="res" aria-pressed="false">Resistências</button>
+  </div>
+
+  <div data-subpanel="calc">
+    <div class="grid">
+      <div class="card">
+        <h3>Lei de Ohm</h3>
+        <p class="sub">Preenche dois valores. Os outros dois aparecem.</p>
+        <div class="fields">
+          <div class="field"><label for="o_v">Tensão U (V)</label><input id="o_v" inputmode="decimal" value="230"></div>
+          <div class="field"><label for="o_i">Corrente I (A)</label><input id="o_i" inputmode="decimal"></div>
+          <div class="field"><label for="o_r">Resistência R (Ω)</label><input id="o_r" inputmode="decimal" value="46"></div>
+          <div class="field"><label for="o_p">Potência P (W)</label><input id="o_p" inputmode="decimal"></div>
+        </div>
+        <div class="row"><button type="button" class="btn ghost small" id="o_clear">Limpar</button></div>
+        <div class="out" id="o_out" aria-live="polite"></div>
+      </div>
+
+      <div class="card">
+        <h3>Potência elétrica</h3>
+        <p class="sub">Potência ativa, aparente e reativa de uma carga.</p>
+        <div class="fields">
+          <div class="field full"><label for="pw_sys">Sistema</label><select id="pw_sys"><option value="tri">Trifásico</option><option value="mono">Monofásico</option></select></div>
+          <div class="field"><label for="pw_u">Tensão (V)</label><input id="pw_u" inputmode="decimal" value="400"></div>
+          <div class="field"><label for="pw_i">Corrente (A)</label><input id="pw_i" inputmode="decimal" value="10"></div>
+          <div class="field full"><label for="pw_c">Fator de potência cos φ</label><input id="pw_c" inputmode="decimal" value="0,85"></div>
+        </div>
+        <div class="out" id="pw_out" aria-live="polite"></div>
+      </div>
+
+      <div class="card">
+        <h3>Corrente de um motor trifásico</h3>
+        <p class="sub">Para escolher cabo e proteção. Se a chapa tem a corrente nominal, usa essa.</p>
+        <div class="fields">
+          <div class="field"><label for="m_p">Potência da chapa (kW)</label><input id="m_p" inputmode="decimal" value="5,5"></div>
+          <div class="field"><label for="m_u">Tensão (V)</label><input id="m_u" inputmode="decimal" value="400"></div>
+          <div class="field"><label for="m_c">cos φ</label><input id="m_c" inputmode="decimal" value="0,85"></div>
+          <div class="field"><label for="m_e">Rendimento (%)</label><input id="m_e" inputmode="decimal" value="88"></div>
+        </div>
+        <div class="out" id="m_out" aria-live="polite"></div>
+      </div>
+
+      <div class="card">
+        <h3>Queda de tensão num cabo</h3>
+        <p class="sub">Resistência do cabo apenas, sem reatância. Boa aproximação para secções até 16 mm².</p>
+        <div class="fields">
+          <div class="field"><label for="q_sys">Sistema</label><select id="q_sys"><option value="tri">Trifásico</option><option value="mono">Monofásico</option></select></div>
+          <div class="field"><label for="q_mat">Condutor</label><select id="q_mat"><option value="0.0178">Cobre</option><option value="0.0282">Alumínio</option></select></div>
+          <div class="field"><label for="q_s">Secção (mm²)</label><input id="q_s" inputmode="decimal" value="4"></div>
+          <div class="field"><label for="q_l">Comprimento (m)</label><input id="q_l" inputmode="decimal" value="50"></div>
+          <div class="field"><label for="q_i">Corrente (A)</label><input id="q_i" inputmode="decimal" value="20"></div>
+          <div class="field"><label for="q_u">Tensão (V)</label><input id="q_u" inputmode="decimal" value="400"></div>
+          <div class="field full"><label for="q_c">cos φ</label><input id="q_c" inputmode="decimal" value="0,9"></div>
+        </div>
+        <div class="out" id="q_out" aria-live="polite"></div>
+      </div>
+
+      <div class="card">
+        <h3>Resistências em série e em paralelo</h3>
+        <p class="sub">Escreve os valores separados por vírgula ou espaço. Aceita 4k7, 2,2k, 1M, 470.</p>
+        <div class="field"><label for="sp_in">Valores</label><input id="sp_in" value="100 220 4k7"></div>
+        <div class="out" id="sp_out" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <div data-subpanel="leis" hidden>
+    <div class="laws">
+      <div class="law"><h3>Lei de Ohm</h3><div class="f">U = R · I</div><p>A tensão é a resistência vezes a corrente. Serve para saber que corrente passa num circuito ou que resistência tem uma carga.</p></div>
+      <div class="law"><h3>Potência</h3><div class="f">P = U · I</div><p>Também P = R·I² e P = U²/R. Usa para dimensionar fusíveis, cabos e resistências de potência.</p></div>
+      <div class="law"><h3>Efeito de Joule</h3><div class="f">E = R · I² · t</div><p>Energia perdida em calor num condutor. Um contacto mal apertado tem resistência a mais e aquece.</p></div>
+      <div class="law"><h3>Kirchhoff, nós</h3><div class="f">ΣI entra = ΣI sai</div><p>Num ponto de ligação, a soma das correntes que chegam é igual à soma das que saem.</p></div>
+      <div class="law"><h3>Kirchhoff, malhas</h3><div class="f">ΣU = 0</div><p>Percorrendo uma malha fechada, a soma das tensões é zero. Ajuda a encontrar onde se perde tensão.</p></div>
+      <div class="law"><h3>Resistências em série</h3><div class="f">Rt = R1 + R2 + …</div><p>A mesma corrente passa por todas. A tensão reparte-se pelas resistências.</p></div>
+      <div class="law"><h3>Resistências em paralelo</h3><div class="f">1/Rt = 1/R1 + 1/R2 + …</div><p>A mesma tensão em todas. O total é sempre menor que a menor resistência.</p></div>
+      <div class="law"><h3>Divisor de tensão</h3><div class="f">U2 = U · R2 / (R1 + R2)</div><p>Usado em sensores e entradas analógicas para reduzir uma tensão.</p></div>
+      <div class="law"><h3>Trifásico, tensões</h3><div class="f">U = √3 · Uf</div><p>A tensão entre fases (400 V) é √3 vezes a tensão fase-neutro (230 V).</p></div>
+      <div class="law"><h3>Trifásico, potência</h3><div class="f">P = √3 · U · I · cos φ</div><p>Potência ativa de uma carga equilibrada. U é a tensão entre fases.</p></div>
+      <div class="law"><h3>Fator de potência</h3><div class="f">cos φ = P / S</div><p>Relação entre a potência útil (kW) e a aparente (kVA). Motores em vazio têm cos φ baixo.</p></div>
+      <div class="law"><h3>Energia</h3><div class="f">E = P · t</div><p>Potência em kW vezes horas dá kWh, a unidade da fatura.</p></div>
+    </div>
+  </div>
+
+  <div data-subpanel="yd" hidden>
+    <div class="cols2">
+      <div class="card">
+        <h3>Posso usar estrela-triângulo?</h3>
+        <p class="sub">Compara a tensão da rede com a chapa do motor. É a primeira verificação antes de montar.</p>
+        <div class="fields">
+          <div class="field"><label for="yd_u">Tensão da rede (entre fases)</label><select id="yd_u"><option value="230">230 V</option><option value="400" selected>400 V</option><option value="690">690 V</option></select></div>
+          <div class="field"><label for="yd_pl">Chapa do motor, Δ / Y</label><select id="yd_pl"><option value="400/690" selected>400 / 690 V</option><option value="230/400">230 / 400 V</option></select></div>
+        </div>
+        <div class="out" id="yd_out" aria-live="polite"></div>
+      </div>
+      <div class="card">
+        <h3>Quanto baixa a corrente de arranque</h3>
+        <p class="sub">A corrente de arranque direto costuma ser 6 a 8 vezes a nominal. Vê a chapa do motor.</p>
+        <div class="fields">
+          <div class="field"><label for="yd_in">Corrente nominal (A)</label><input id="yd_in" inputmode="decimal" value="10,6"></div>
+          <div class="field"><label for="yd_k">Ia / In (arranque direto)</label><input id="yd_k" inputmode="decimal" value="7"></div>
+        </div>
+        <div class="out" id="yd_cur" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Como funciona</h3>
+      <p>O motor trifásico tem três enrolamentos com seis terminais na caixa de bornes (U1 V1 W1 e U2 V2 W2). Em triângulo, cada enrolamento recebe a tensão total entre fases. Em estrela, recebe só 58 % dessa tensão (1/√3). O arranque estrela-triângulo começa em estrela, com corrente e binário reduzidos, e passa a triângulo quando o motor já ganhou velocidade.</p>
+      <div class="diagram">
+        <figure>
+          <svg viewBox="0 0 220 150" role="img" aria-label="Ligação em estrela: os terminais W2, U2 e V2 unidos por uma barra, a rede nos terminais U1, V1 e W1">
+            <path class="w" d="M40 35V18H180V35M110 18V35"/>
+            <g class="s"><path d="M40 95V130M110 95V130M180 95V130"/></g>
+            <g class="t"><circle cx="40" cy="35" r="10"/><circle cx="110" cy="35" r="10"/><circle cx="180" cy="35" r="10"/><circle cx="40" cy="95" r="10"/><circle cx="110" cy="95" r="10"/><circle cx="180" cy="95" r="10"/></g>
+            <g text-anchor="middle"><text x="40" y="39">W2</text><text x="110" y="39">U2</text><text x="180" y="39">V2</text><text x="40" y="99">U1</text><text x="110" y="99">V1</text><text x="180" y="99">W1</text><text x="40" y="145">L1</text><text x="110" y="145">L2</text><text x="180" y="145">L3</text></g>
+          </svg>
+          <figcaption><strong>Estrela (Y)</strong>. Barra a unir os três terminais de cima. Cada enrolamento a 231 V numa rede de 400 V.</figcaption>
+        </figure>
+        <figure>
+          <svg viewBox="0 0 220 150" role="img" aria-label="Ligação em triângulo: W2 ligado a U1, U2 a V1 e V2 a W1, rede nos terminais de baixo">
+            <path class="w" d="M40 45V85M110 45V85M180 45V85"/>
+            <g class="s"><path d="M40 95V130M110 95V130M180 95V130"/></g>
+            <g class="t"><circle cx="40" cy="35" r="10"/><circle cx="110" cy="35" r="10"/><circle cx="180" cy="35" r="10"/><circle cx="40" cy="95" r="10"/><circle cx="110" cy="95" r="10"/><circle cx="180" cy="95" r="10"/></g>
+            <g text-anchor="middle"><text x="40" y="39">W2</text><text x="110" y="39">U2</text><text x="180" y="39">V2</text><text x="40" y="99">U1</text><text x="110" y="99">V1</text><text x="180" y="99">W1</text><text x="40" y="145">L1</text><text x="110" y="145">L2</text><text x="180" y="145">L3</text></g>
+          </svg>
+          <figcaption><strong>Triângulo (Δ)</strong>. Pontes na vertical: W2 a U1, U2 a V1, V2 a W1. Cada enrolamento a 400 V.</figcaption>
+        </figure>
+      </div>
+      <p class="foot">Nos arrancadores automáticos, as ligações das pontes são feitas pelos contactores e os seis fios do motor vão todos ao quadro. As figuras mostram a ligação manual na caixa de bornes.</p>
+    </div>
+
+    <div class="cols2" style="margin-top:16px">
+      <div class="card">
+        <h3>Sequência do arranque</h3>
+        <ol class="steps">
+          <li>Fecham o contactor de linha <strong>KM1</strong> e o de estrela <strong>KM2</strong>. O motor arranca em estrela.</li>
+          <li>O temporizador <strong>KT</strong> conta. Regula-o para o motor chegar a cerca de 80 a 90 % da velocidade, tipicamente 5 a 10 s, mais tempo em cargas pesadas.</li>
+          <li>KM2 abre. Uma pausa curta, de algumas dezenas de milissegundos, evita curto-circuito.</li>
+          <li>Fecha o contactor de triângulo <strong>KM3</strong>. O motor passa a trabalhar em triângulo à tensão e potência nominais.</li>
+        </ol>
+        <p class="note bad"><strong>Intertravamento.</strong> KM2 e KM3 nunca podem estar fechados ao mesmo tempo, senão há curto-circuito entre fases. Liga o contacto normalmente fechado de cada um em série com a bobina do outro.</p>
+      </div>
+      <div class="card">
+        <h3>Quando usar e quando evitar</h3>
+        <ul class="steps">
+          <li><strong>Serve</strong> para bombas e ventiladores centrífugos e máquinas que arrancam em vazio ou com pouca carga.</li>
+          <li><strong>Evita</strong> em cargas com binário alto no arranque, como compressores de êmbolo, esmagadores ou transportadores carregados. Em estrela o binário cai para um terço e o motor pode não arrancar.</li>
+          <li><strong>Relé térmico.</strong> Em série com a linha, regula para a corrente nominal da chapa. Em série com os enrolamentos (circuito do triângulo), regula para cerca de 58 % dessa corrente (In/√3).</li>
+          <li><strong>Pico na comutação.</strong> Se a passagem a triângulo faz um pico forte de corrente, o tempo em estrela está curto e o motor ainda não ganhou velocidade.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div data-subpanel="res" hidden>
+    <div class="cols2">
+      <div class="card">
+        <h3>Cores para valor</h3>
+        <div class="seg" role="group" aria-label="Número de riscas">
+          <button type="button" data-bands="4" aria-pressed="true">4 riscas</button>
+          <button type="button" data-bands="5" aria-pressed="false">5 riscas</button>
+        </div>
+        <svg class="resvg" id="rc_svg" viewBox="0 0 300 80" role="img" aria-label="Resistência com as riscas escolhidas"></svg>
+        <div class="fields">
+          <div class="field"><label for="rc_d1">1.º dígito</label><select id="rc_d1"></select></div>
+          <div class="field"><label for="rc_d2">2.º dígito</label><select id="rc_d2"></select></div>
+          <div class="field" id="rc_d3w" hidden><label for="rc_d3">3.º dígito</label><select id="rc_d3"></select></div>
+          <div class="field"><label for="rc_m">Multiplicador</label><select id="rc_m"></select></div>
+          <div class="field"><label for="rc_t">Tolerância</label><select id="rc_t"></select></div>
+        </div>
+        <div class="out" id="rc_out" aria-live="polite"></div>
+      </div>
+      <div class="card">
+        <h3>Valor para cores</h3>
+        <p class="sub">Escreve o valor que procuras. Aceita 4k7, 2,2k, 330, 1M.</p>
+        <div class="field"><label for="rv_in">Valor (Ω)</label><input id="rv_in" value="4k7"></div>
+        <div class="out" id="rv_out" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>Tabela de cores</h3>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Cor</th><th>Dígito</th><th>Multiplicador</th><th>Tolerância</th></tr></thead>
+          <tbody id="rc_table"></tbody>
+        </table>
+      </div>
+      <p class="foot">Sem risca de tolerância, a tolerância é ±20 %. Nas resistências de 5 riscas, a risca de tolerância fica mais afastada das outras. Lê sempre a partir do lado oposto a ela.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SERRALHARIA ===================== -->
+<section id="p-serralharia" class="panel" hidden>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <h2>Serralharia</h2>
+    <p class="lead">Escreve o parafuso que tens ou que queres, por exemplo M5x25. A app diz o passo da rosca, a broca para abrir rosca, o furo de passagem e a chave a usar.</p>
+  </div>
+  <div class="card">
+    <div class="field"><label for="b_in">Parafuso</label><input id="b_in" value="M5x25" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="M8x30"></div>
+    <div class="chips" id="b_chips" aria-label="Medidas rápidas"></div>
+    <p class="foot">Formato M diâmetro x comprimento, em mm. Para rosca fina escreve M10x1,25x30 (diâmetro, passo, comprimento).</p>
+  </div>
+  <div id="b_out" class="panel" style="gap:16px" aria-live="polite"></div>
+  <div class="card" id="b_fix_card" hidden>
+    <h3>Vai chegar este comprimento?</h3>
+    <p class="sub">Indica o que vais fixar. A app diz o comprimento mínimo e o parafuso normalizado a pedir.</p>
+    <div class="fields">
+      <div class="field"><label for="f_mode">Fixação</label><select id="f_mode"><option value="nut">Parafuso e porca</option><option value="tap">Furo roscado na peça</option></select></div>
+      <div class="field"><label for="f_mat">Material da peça roscada</label><select id="f_mat"><option value="1">Aço</option><option value="1.5">Ferro fundido</option><option value="2">Alumínio</option></select></div>
+      <div class="field full"><label for="f_t">Espessura a fixar (mm)</label><input id="f_t" inputmode="decimal" value="12"></div>
+    </div>
+    <div class="out" id="f_out" aria-live="polite"></div>
+  </div>
+  <p class="foot">Valores segundo ISO 261, ISO 273 e ISO 4017, com rosca métrica normal. Os binários de aperto são indicativos, para rosca seca. Confirma sempre na tabela do fabricante do parafuso e nas instruções da máquina.</p>
+</section>
+
+<!-- ===================== LIVRO ===================== -->
+<section id="p-livro" class="panel" hidden>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <h2>Livro do Operário</h2>
+    <p class="lead">Regista cada intervenção de manutenção: o quê, onde, com que peças e quanto tempo levou. Fica a tua história por equipamento.</p>
+    <p class="foot" id="l_status"></p>
+  </div>
+
+  <form class="card" id="l_form" autocomplete="off">
+    <h3 id="l_title">Novo registo</h3>
+    <div class="fields">
+      <div class="field"><label for="l_data">Data</label><input id="l_data" type="date" required></div>
+      <div class="field"><label for="l_tipo">Tipo</label>
+        <select id="l_tipo">
+          <option>Manutenção preventiva</option><option>Reparação</option><option>Inspeção</option><option>Instalação</option><option>Ajuste ou calibração</option><option>Melhoria</option>
+        </select>
+      </div>
+      <div class="field full"><label for="l_equip">Equipamento ou local</label><input id="l_equip" list="l_equips" placeholder="Compressor 2, Linha 3, Quadro QE-04" required style="font-family:var(--font-body)"></div>
+      <datalist id="l_equips"></datalist>
+      <div class="field full"><label for="l_desc">O que foi feito</label><textarea id="l_desc" placeholder="Avaria encontrada, o que mediste, o que trocaste, como ficou." required></textarea></div>
+      <div class="field full"><label for="l_pecas">Peças e material usado</label><input id="l_pecas" placeholder="Contactor LC1D09, 2 m de cabo 2,5 mm²" style="font-family:var(--font-body)"></div>
+      <div class="field"><label for="l_horas">Tempo (horas)</label><input id="l_horas" inputmode="decimal" placeholder="1,5"></div>
+      <div class="field"><label for="l_estado">Estado</label>
+        <select id="l_estado"><option>Concluído</option><option>Pendente</option><option>A aguardar peça</option></select>
+      </div>
+      <div class="field full"><label for="l_tec">Técnico</label><input id="l_tec" placeholder="Nome" style="font-family:var(--font-body)"></div>
+    </div>
+    <div class="row">
+      <button class="btn" type="submit" id="l_save">Guardar registo</button>
+      <button class="btn ghost" type="button" id="l_cancel" hidden>Cancelar edição</button>
+      <span id="l_msg" class="foot" role="status"></span>
+    </div>
+  </form>
+
+  <div class="stats" id="l_stats"></div>
+
+  <div class="card">
+    <div class="fields">
+      <div class="field"><label for="f_q">Procurar</label><input id="f_q" placeholder="Equipamento, peça, texto" style="font-family:var(--font-body)"></div>
+      <div class="field"><label for="f_tipo">Tipo</label><select id="f_tipo"><option value="">Todos</option></select></div>
+      <div class="field full"><label for="f_est">Mostrar</label><select id="f_est"><option value="">Todos os registos</option><option value="abertos">Só pendentes e a aguardar peça</option></select></div>
+    </div>
+  </div>
+
+  <div id="l_list" class="panel" style="gap:12px"></div>
+
+  <details class="card">
+    <summary>Cópia de segurança</summary>
+    <p class="sub">Gera o texto, guarda-o numa nota ou envia-o a ti próprio. Para restaurar, cola-o aqui e carrega em restaurar. Os registos com o mesmo identificador são substituídos.</p>
+    <textarea id="bk_text" style="font-family:var(--font-mono);font-size:13px;min-height:110px" spellcheck="false" aria-label="Texto da cópia de segurança"></textarea>
+    <div class="row">
+      <button class="btn ghost small" type="button" id="bk_gen">Gerar e copiar</button>
+      <button class="btn ghost small" type="button" id="bk_res">Restaurar</button>
+      <span class="foot" id="bk_msg" role="status"></span>
+    </div>
+  </details>
+</section>
+
+<p class="foot" style="margin-top:28px">Valores de referência para apoio à decisão. Confirma sempre na chapa de características, no manual do fabricante e nas normas e regras de segurança aplicáveis antes de intervir.</p>
+</main>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- utilitários ---------- */
+var $=function(id){return document.getElementById(id)};
+function num(id){var s=$(id).value.trim().replace(',','.');return s===''?NaN:Number(s)}
+function fmt(n,max){
+  if(!isFinite(n))return '—';
+  if(n===0)return '0';
+  return Number(n.toPrecision(4)).toLocaleString('pt-PT',{maximumFractionDigits:max==null?6:max});
+}
+function fmt2(n){return n.toLocaleString('pt-PT',{maximumFractionDigits:2})}
+function si(v,u){
+  if(v>=1e6)return fmt(v/1e6)+' M'+u;
+  if(v>=1e3)return fmt(v/1e3)+' k'+u;
+  return fmt(v)+' '+u;
+}
+function el(tag,attrs){
+  var e=document.createElement(tag);
+  attrs=attrs||{};
+  for(var k in attrs){
+    if(k==='class')e.className=attrs[k];
+    else if(k==='text')e.textContent=attrs[k];
+    else if(k.slice(0,2)==='on')e.addEventListener(k.slice(2),attrs[k]);
+    else e.setAttribute(k,attrs[k]);
+  }
+  for(var i=2;i<arguments.length;i++){
+    var c=arguments[i];
+    if(c==null)continue;
+    if(Array.isArray(c)){c.forEach(function(x){if(x!=null)e.append(x.nodeType?x:document.createTextNode(x))});continue}
+    e.append(c.nodeType?c:document.createTextNode(c));
+  }
+  return e;
+}
+/* rows: [rótulo, valor, destacado] */
+function show(out,rows,note,tone){
+  out.replaceChildren();
+  if(rows&&rows.length){
+    var dl=el('dl',{class:'kv'});
+    rows.forEach(function(r){
+      dl.append(el('div',{class:r[2]?'given':''},el('dt',{text:r[0]}),el('dd',{text:r[1]})));
+    });
+    out.append(dl);
+  }
+  if(note)out.append(el('p',{class:'note '+(tone||''),text:note}));
+}
+function parseRes(str){
+  var s=String(str).trim().toLowerCase().replace(',','.').replace(/ω|ohm|Ω/g,'');
+  var m=s.match(/^(\d*\.?\d+)\s*([rkm])?(\d+)?$/);
+  if(!m)return NaN;
+  var unit=m[2]||'';
+  var base=(unit&&m[3]!==undefined)?parseFloat(m[1]+'.'+m[3]):parseFloat(m[1]);
+  if(m[3]!==undefined&&!unit)return NaN;
+  var mult={'':1,r:1,k:1e3,m:1e6}[unit];
+  return base*mult;
+}
+function fmtOhm(v){
+  if(v>=1e6)return fmt(v/1e6)+' MΩ';
+  if(v>=1e3)return fmt(v/1e3)+' kΩ';
+  return fmt(v)+' Ω';
+}
+
+/* ---------- menus ---------- */
+var TABS=['eletricidade','serralharia','livro'];
+function route(){
+  var h=(location.hash||'').slice(1);
+  if(TABS.indexOf(h)<0)h='eletricidade';
+  TABS.forEach(function(t){
+    $('p-'+t).hidden=(t!==h);
+    var a=document.querySelector('[data-tab="'+t+'"]');
+    if(t===h)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
+  });
+}
+window.addEventListener('hashchange',route);
+route();
+
+document.querySelectorAll('[data-sub]').forEach(function(b){
+  b.addEventListener('click',function(){
+    var s=b.getAttribute('data-sub');
+    document.querySelectorAll('[data-sub]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b))});
+    document.querySelectorAll('[data-subpanel]').forEach(function(p){p.hidden=p.getAttribute('data-subpanel')!==s});
+  });
+});
+
+/* ---------- eletricidade: calculadoras ---------- */
+function calcOhm(){
+  var ids=['v','i','r','p'],vals={};
+  ids.forEach(function(k){vals[k]=num('o_'+k)});
+  var given=ids.filter(function(k){return !isNaN(vals[k])});
+  var out=$('o_out');
+  if(given.length<2){show(out,[],'Preenche dois valores. Os outros dois são calculados.');return}
+  if(given.length>2){show(out,[],'Tens '+given.length+' valores preenchidos. Deixa só dois e limpa os outros.','warn');return}
+  if(given.some(function(k){return !(vals[k]>0)})){show(out,[],'Os valores têm de ser maiores que zero.','bad');return}
+  var v=vals.v,i=vals.i,r=vals.r,p=vals.p,g=given.join('');
+  if(g==='vi'){r=v/i;p=v*i}
+  else if(g==='vr'){i=v/r;p=v*v/r}
+  else if(g==='vp'){i=p/v;r=v*v/p}
+  else if(g==='ir'){v=i*r;p=i*i*r}
+  else if(g==='ip'){v=p/i;r=p/(i*i)}
+  else if(g==='rp'){v=Math.sqrt(p*r);i=Math.sqrt(p/r)}
+  show(out,[
+    ['Tensão U',fmt(v)+' V',given.indexOf('v')>=0],
+    ['Corrente I',fmt(i)+' A',given.indexOf('i')>=0],
+    ['Resistência R',fmt(r)+' Ω',given.indexOf('r')>=0],
+    ['Potência P',si(p,'W'),given.indexOf('p')>=0]
+  ]);
+}
+function calcPow(){
+  var U=num('pw_u'),I=num('pw_i'),c=num('pw_c'),tri=$('pw_sys').value==='tri',out=$('pw_out');
+  if(!(U>0)||!(I>0)||!(c>0&&c<=1)){show(out,[],'Preenche tensão, corrente e um cos φ entre 0 e 1.','warn');return}
+  var S=(tri?Math.sqrt(3):1)*U*I,P=S*c,Q=S*Math.sqrt(1-c*c);
+  show(out,[['Potência ativa P',si(P,'W')],['Potência aparente S',si(S,'VA')],['Potência reativa Q',si(Q,'var')]]);
+}
+function calcMotor(){
+  var P=num('m_p'),U=num('m_u'),c=num('m_c'),e=num('m_e'),out=$('m_out');
+  if(!(P>0)||!(U>0)||!(c>0&&c<=1)||!(e>0&&e<=100)){show(out,[],'Preenche potência, tensão, cos φ (0 a 1) e rendimento (1 a 100).','warn');return}
+  var In=P*1000/(Math.sqrt(3)*U*c*(e/100)),Pin=P/(e/100);
+  show(out,[['Corrente nominal',fmt(In)+' A'],['Potência absorvida',fmt(Pin)+' kW']],
+    'A proteção do motor (relé térmico) regula-se pela corrente da chapa. O cabo escolhe-se para pelo menos 1,25 vezes a corrente nominal.');
+}
+function calcDrop(){
+  var S=num('q_s'),L=num('q_l'),I=num('q_i'),U=num('q_u'),c=num('q_c'),rho=Number($('q_mat').value),tri=$('q_sys').value==='tri',out=$('q_out');
+  if(!(S>0)||!(L>0)||!(I>0)||!(U>0)||!(c>0&&c<=1)){show(out,[],'Preenche todos os campos com valores positivos.','warn');return}
+  var k=tri?Math.sqrt(3):2,dU=k*rho*L*I*c/S,pct=dU/U*100;
+  var tone=pct<=3?'ok':(pct<=5?'warn':'bad');
+  var txt=pct<=3?'Dentro do limite de 3 %, habitual para iluminação.':(pct<=5?'Acima de 3 % e dentro de 5 %. Serve para outros usos, mas não para iluminação.':'Acima de 5 %. Aumenta a secção do cabo.');
+  show(out,[['Queda de tensão',fmt(dU)+' V'],['Em percentagem',fmt(pct)+' %']],txt+' Resistividade a 20 °C. Em cabos quentes a queda é um pouco maior.',tone);
+}
+function calcSP(){
+  var out=$('sp_out');
+  var parts=$('sp_in').value.split(/[\s,;]+/).filter(Boolean);
+  var vals=parts.map(parseRes);
+  if(parts.length<2||vals.some(function(v){return !(v>0)})){show(out,[],'Escreve pelo menos dois valores válidos, por exemplo 100 220 4k7.','warn');return}
+  var ser=vals.reduce(function(a,b){return a+b},0);
+  var par=1/vals.reduce(function(a,b){return a+1/b},0);
+  show(out,[['Em série',fmtOhm(ser)],['Em paralelo',fmtOhm(par)]]);
+}
+$('o_clear').addEventListener('click',function(){['o_v','o_i','o_r','o_p'].forEach(function(id){$(id).value=''});calcOhm();$('o_v').focus()});
+
+/* ---------- estrela-triângulo ---------- */
+function calcYD(){
+  var U=Number($('yd_u').value),pl=$('yd_pl').value.split('/').map(Number),lo=pl[0],hi=pl[1],out=$('yd_out');
+  var f=U/Math.sqrt(3);
+  if(U===lo){
+    show(out,[['Resultado','Sim, pode'],['A trabalhar','Triângulo, enrolamentos a '+lo+' V'],['A arrancar','Estrela, enrolamentos a '+fmt(f,0)+' V']],
+      'O motor liga em triângulo à tensão da rede, que é o que este arranque exige.','ok');
+  }else if(U===hi){
+    show(out,[['Resultado','Não pode'],['Este motor','Liga em estrela a '+U+' V']],
+      'Em triângulo, cada enrolamento levaria '+U+' V em vez de '+lo+' V e queimava. Usa arranque direto, arrancador suave ou variador de frequência.','bad');
+  }else{
+    show(out,[['Resultado','Não coincide']],'A tensão da rede não é nenhuma das duas da chapa ('+lo+' / '+hi+' V). Este motor não serve para esta rede.','warn');
+  }
+}
+function calcYDcur(){
+  var In=num('yd_in'),k=num('yd_k'),out=$('yd_cur');
+  if(!(In>0)||!(k>0)){show(out,[],'Preenche a corrente nominal e a relação Ia/In.','warn');return}
+  var Ia=In*k;
+  show(out,[['Arranque direto',fmt(Ia)+' A'],['Arranque estrela',fmt(Ia/3)+' A'],['Binário em estrela','1/3 do direto']],
+    'A corrente de linha e o binário de arranque descem para um terço.','ok');
+}
+
+/* ---------- resistências ---------- */
+var COLORS=[
+  ['Preto','#15181b',0,1,null],['Castanho','#7a4a21',1,10,1],['Vermelho','#d23b2f',2,100,2],
+  ['Laranja','#ef7d17',3,1e3,null],['Amarelo','#f2c318',4,1e4,null],['Verde','#2f9e53',5,1e5,0.5],
+  ['Azul','#2467c9',6,1e6,0.25],['Violeta','#7b52b3',7,1e7,0.1],['Cinzento','#8b969d',8,1e8,0.05],
+  ['Branco','#f3f4f2',9,1e9,null],['Dourado','#c79a1e',null,0.1,5],['Prateado','#b9c1c7',null,0.01,10]
+];
+var nBands=4;
+function mulLabel(m){
+  if(m>=1e9)return '×1G';
+  if(m>=1e6)return '×'+(m/1e6)+'M';
+  if(m>=1e3)return '×'+(m/1e3)+'k';
+  return '×'+String(m).replace('.',',');
+}
+function tolLabel(t){return '±'+String(t).replace('.',',')+' %'}
+function fillSel(id,idxs,def,lab){
+  var s=$(id);
+  idxs.forEach(function(i){var o=document.createElement('option');o.value=i;o.textContent=COLORS[i][0]+' ('+lab(i)+')';s.append(o)});
+  s.value=String(def);
+}
+var all=COLORS.map(function(c,i){return i});
+fillSel('rc_d1',all.filter(function(i){return COLORS[i][2]!==null&&i>0}),4,function(i){return COLORS[i][2]});
+fillSel('rc_d2',all.filter(function(i){return COLORS[i][2]!==null}),7,function(i){return COLORS[i][2]});
+fillSel('rc_d3',all.filter(function(i){return COLORS[i][2]!==null}),0,function(i){return COLORS[i][2]});
+fillSel('rc_m',all,2,function(i){return mulLabel(COLORS[i][3])});
+fillSel('rc_t',all.filter(function(i){return COLORS[i][4]!==null}),10,function(i){return tolLabel(COLORS[i][4])});
+(function(){var o=document.createElement('option');o.value='-1';o.textContent='Sem risca (±20 %)';$('rc_t').append(o)})();
+
+function drawRes(idx){
+  var pos=nBands===4?[95,125,155]:[82,108,134,160];
+  var s='<line x1="6" y1="40" x2="62" y2="40" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>'+
+        '<line x1="238" y1="40" x2="294" y2="40" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>'+
+        '<rect x="52" y="12" width="196" height="56" rx="16" fill="#d8c8a0" stroke="rgba(0,0,0,.4)"/>';
+  idx.forEach(function(ci,n){
+    if(ci<0)return;
+    var x=(n<idx.length-1)?pos[n]:208;
+    s+='<rect x="'+x+'" y="12" width="13" height="56" fill="'+COLORS[ci][1]+'" stroke="rgba(0,0,0,.4)"/>';
+  });
+  $('rc_svg').innerHTML=s;
+}
+function calcRC(){
+  var d1=+$('rc_d1').value,d2=+$('rc_d2').value,d3=+$('rc_d3').value,m=+$('rc_m').value,t=+$('rc_t').value;
+  var digits=nBands===4?[d1,d2]:[d1,d2,d3];
+  var val=Number(digits.map(function(i){return COLORS[i][2]}).join(''))*COLORS[m][3];
+  var tol=t<0?20:COLORS[t][4];
+  drawRes(digits.concat([m,t]));
+  var lo=val*(1-tol/100),hi=val*(1+tol/100);
+  show($('rc_out'),[['Valor',fmtOhm(val)],['Tolerância','±'+String(tol).replace('.',',')+' %'],['Pode medir entre',fmtOhm(lo)+' e '+fmtOhm(hi)]]);
+}
+document.querySelectorAll('[data-bands]').forEach(function(b){
+  b.addEventListener('click',function(){
+    nBands=Number(b.getAttribute('data-bands'));
+    document.querySelectorAll('[data-bands]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b))});
+    $('rc_d3w').hidden=nBands===4;
+    calcRC();
+  });
+});
+function bandsFor(v,n){
+  var e=Math.floor(Math.log10(v))-(n-1);
+  var d=Math.round(v/Math.pow(10,e));
+  if(d>=Math.pow(10,n)){d=Math.round(d/10);e++}
+  if(e<-2||e>9)return null;
+  var ds=String(d);
+  while(ds.length<n)ds='0'+ds;
+  var names=ds.split('').map(function(c){return Number(c)});
+  var mi=e>=0?e:(e===-1?10:11);
+  return{digits:names,mul:mi,actual:d*Math.pow(10,e)};
+}
+function bandChips(b,tolIdx){
+  var seq=b.digits.concat([b.mul,tolIdx]);
+  return el('div',{class:'bands'},seq.map(function(ci){
+    return el('span',{},el('i',{class:'dot',style:'background:'+COLORS[ci][1]}),COLORS[ci][0]);
+  }));
+}
+function calcRV(){
+  var out=$('rv_out'),v=parseRes($('rv_in').value);
+  out.replaceChildren();
+  if(!(v>0)){out.append(el('p',{class:'note warn',text:'Escreve um valor válido, por exemplo 4k7 ou 330.'}));return}
+  var b4=bandsFor(v,2),b5=bandsFor(v,3);
+  if(!b4&&!b5){out.append(el('p',{class:'note bad',text:'Valor fora do alcance do código de cores (0,01 Ω a 99 GΩ).'}));return}
+  if(b4){
+    out.append(el('span',{class:'lbl',text:'4 riscas, ±5 %'}),bandChips(b4,10));
+    if(Math.abs(b4.actual-v)/v>0.001)out.append(el('p',{class:'note warn',text:'Com 2 dígitos o valor mais próximo é '+fmtOhm(b4.actual)+'. Para '+fmtOhm(v)+' usa 5 riscas.'}));
+  }
+  if(b5){
+    out.append(el('span',{class:'lbl',text:'5 riscas, ±1 %'}),bandChips(b5,1));
+    if(Math.abs(b5.actual-v)/v>0.001)out.append(el('p',{class:'note warn',text:'O valor mais próximo com 3 dígitos é '+fmtOhm(b5.actual)+'.'}));
+  }
+}
+(function(){
+  var tb=$('rc_table');
+  COLORS.forEach(function(c){
+    tb.append(el('tr',{},
+      el('td',{},el('i',{class:'dot',style:'background:'+c[1]}),c[0]),
+      el('td',{class:'m',text:c[2]===null?'—':String(c[2])}),
+      el('td',{class:'m',text:mulLabel(c[3])}),
+      el('td',{class:'m',text:c[4]===null?'—':tolLabel(c[4])})
+    ));
+  });
+})();
+
+function runElec(){calcOhm();calcPow();calcMotor();calcDrop();calcSP();calcYD();calcYDcur();calcRC();calcRV()}
+$('p-eletricidade').addEventListener('input',runElec);
+$('p-eletricidade').addEventListener('change',runElec);
+runElec();
+
+/* ---------- serralharia ---------- */
+/* d: [passo normal, furo justo, furo médio, furo largo, chave sextavada, chave Allen, aperto 8.8, aperto 10.9] */
+var BOLTS={
+  2:[.4,2.2,2.4,2.6,4,1.5,null,null],
+  2.5:[.45,2.7,2.9,3.1,5,2,null,null],
+  3:[.5,3.2,3.4,3.6,5.5,2.5,1.3,1.8],
+  4:[.7,4.3,4.5,4.8,7,3,3,4.4],
+  5:[.8,5.3,5.5,5.8,8,4,6,8.7],
+  6:[1,6.4,6.6,7,10,5,10,15],
+  8:[1.25,8.4,9,10,13,6,25,36],
+  10:[1.5,10.5,11,12,16,8,49,72],
+  12:[1.75,13,13.5,14.5,18,10,85,125],
+  14:[2,15,15.5,16.5,21,12,135,200],
+  16:[2,17,17.5,18.5,24,14,210,310],
+  18:[2.5,19,20,21,27,14,null,null],
+  20:[2.5,21,22,24,30,17,410,610],
+  22:[2.5,23,24,26,34,17,null,null],
+  24:[3,25,26,28,36,19,710,1050],
+  27:[3,28,30,32,41,19,null,null],
+  30:[3.5,31,33,35,46,22,null,null]
+};
+var FINE={8:[1],10:[1.25,1],12:[1.5,1.25],14:[1.5],16:[1.5],18:[2,1.5],20:[2,1.5],22:[2,1.5],24:[2],27:[2],30:[2]};
+var STD_LEN=[6,8,10,12,16,20,25,30,35,40,45,50,55,60,65,70,80,90,100,110,120,130,140,150,160,180,200];
+function nextStd(x){for(var i=0;i<STD_LEN.length;i++){if(STD_LEN[i]>=x-1e-9)return STD_LEN[i]}return null}
+var bolt=null;
+var torqueClass='8';
+
+function rcard(k,v,d){return el('div',{class:'rc'},el('span',{class:'k',text:k}),el('span',{class:'v',text:v}),el('span',{class:'d',text:d||''}))}
+
+function calcBolt(){
+  var out=$('b_out'),card=$('b_fix_card');
+  var s=$('b_in').value.toUpperCase().replace(/\s+/g,'').replace(/,/g,'.').replace(/[×*]/g,'X');
+  var m=s.match(/^M(\d+(?:\.\d+)?)(?:X(\d+(?:\.\d+)?))?(?:X(\d+(?:\.\d+)?))?$/);
+  out.replaceChildren();bolt=null;card.hidden=true;
+  if(!m){out.append(el('p',{class:'note warn',text:'Escreve o parafuso no formato M5x25 (diâmetro x comprimento em mm).'}));return}
+  var d=parseFloat(m[1]),p=null,L=null;
+  if(m[3]!==undefined){p=parseFloat(m[2]);L=parseFloat(m[3])}
+  else if(m[2]!==undefined){L=parseFloat(m[2])}
+  var row=BOLTS[d];
+  if(!row){out.append(el('p',{class:'note bad',text:'M'+String(d).replace('.',',')+' não está na tabela. Medidas disponíveis: '+Object.keys(BOLTS).map(function(k){return 'M'+k.replace('.',',')}).join(', ')+'.'}));return}
+  var coarse=row[0],fine=FINE[d]||[];
+  var pitch=p==null?coarse:p,pitchNote='Passo normal (rosca grossa).';
+  if(p!=null){
+    if(p===coarse)pitchNote='Passo normal (rosca grossa).';
+    else if(fine.indexOf(p)>=0)pitchNote='Rosca fina. O passo normal de M'+d+' seria '+fmt2(coarse)+' mm.';
+    else pitchNote='Atenção: '+fmt2(p)+' mm não é um passo normalizado de M'+d+'. Passo normal '+fmt2(coarse)+(fine.length?' e finos '+fine.map(fmt2).join(', '):'')+'.';
+  }
+  var drill=d-pitch;
+  bolt={d:d,p:pitch,L:L,row:row};
+  var dd=String(d).replace('.',',');
+  var cards=[
+    rcard('Passo da rosca',fmt2(pitch)+' mm',pitchNote+(p==null&&fine.length?' Finos: '+fine.map(fmt2).join(' ou ')+' mm.':'')),
+    rcard('Broca para rosca (macho)','Ø '+fmt2(drill)+' mm','Furo antes de abrir a rosca com o macho: '+dd+' − '+fmt2(pitch)+' mm.'),
+    rcard('Furo de passagem','Ø '+fmt2(row[2])+' mm','Justo '+fmt2(row[1])+' · Médio '+fmt2(row[2])+' · Largo '+fmt2(row[3])+' mm (ISO 273). O médio serve na maioria dos casos.'),
+    rcard('Chave',fmt2(row[4])+' mm','Sextavado exterior ISO. Sextavado interior (Allen): '+fmt2(row[5])+' mm. Parafusos DIN antigos podem ter 1 mm a mais em M10, M12 e M14.')
+  ];
+  var tq=el('div',{class:'rc'});
+  tq.append(el('span',{class:'k',text:'Binário de aperto'}));
+  var tv=torqueClass==='8'?row[6]:row[7];
+  tq.append(el('span',{class:'v',text:tv==null?'—':'≈ '+fmt2(tv)+' N·m'}));
+  var sel=el('select',{id:'b_cls','aria-label':'Classe de resistência'},el('option',{value:'8',text:'Classe 8.8'}),el('option',{value:'10',text:'Classe 10.9'}));
+  sel.value=torqueClass;
+  sel.addEventListener('change',function(){torqueClass=sel.value;calcBolt()});
+  tq.append(sel,el('span',{class:'d',text:tv==null?'Sem valor na tabela. Consulta o fabricante.':'Indicativo, rosca seca. Lubrificada baixa cerca de 20 %. Confirma no fabricante.'}));
+  cards.push(tq);
+  if(L!=null)cards.push(rcard('Comprimento',fmt2(L)+' mm','Medido debaixo da cabeça, sem contar a cabeça.'));
+  else cards.push(rcard('Comprimento','—','Escreve também o comprimento, por exemplo M'+dd+'x25.'));
+  out.append(el('div',{class:'result-cards'},cards));
+  card.hidden=false;
+  calcFix();
+}
+function calcFix(){
+  var out=$('f_out');
+  if(!bolt){return}
+  var d=bolt.d,p=bolt.p,L=bolt.L,t=num('f_t'),mode=$('f_mode').value,f=Number($('f_mat').value);
+  $('f_mat').disabled=(mode==='nut');
+  if(!(t>0)){show(out,[],'Indica a espessura a fixar.','warn');return}
+  if(mode==='nut'){
+    var Lmin=t+d+2*p; /* arruela ≈0,2d + porca ≈0,8d + 2 passos de saliência */
+    var std=nextStd(Lmin);
+    var rows=[['Comprimento mínimo',fmt2(Lmin)+' mm'],['Parafuso a pedir',std?'M'+String(d).replace('.',',')+'x'+std:'acima de 200 mm']];
+    if(L==null){show(out,rows,'Contas: espessura + arruela + porca + 2 passos de rosca a sair.');return}
+    if(L>=Lmin-1e-9)show(out,rows,'O comprimento de '+fmt2(L)+' mm chega. Sobram '+fmt2(L-Lmin)+' mm.','ok');
+    else show(out,rows,'O comprimento de '+fmt2(L)+' mm é curto, faltam '+fmt2(Lmin-L)+' mm. Passa a '+(std?std+' mm':'um mais comprido')+'.','bad');
+  }else{
+    var need=f*d,Lm=t+need,std2=nextStd(Lm);
+    var rows2=[['Rosca útil mínima',fmt2(need)+' mm ('+fmt2(f)+' × d)'],['Comprimento mínimo',fmt2(Lm)+' mm'],['Parafuso a pedir',std2?'M'+String(d).replace('.',',')+'x'+std2:'acima de 200 mm'],['Furo cego, profundidade',fmt2(need+3*p)+' mm']];
+    if(L==null){show(out,rows2,'A profundidade do furo deixa 3 passos livres para o macho não bater no fundo.');return}
+    var eng=L-t;
+    if(eng>=need-1e-9)show(out,rows2,'Rosca engatada: '+fmt2(eng)+' mm ('+fmt2(eng/d)+' × d). Chega.','ok');
+    else show(out,rows2,'Rosca engatada: '+fmt2(eng)+' mm ('+fmt2(Math.max(eng,0)/d)+' × d). É pouca. A rosca pode abrir ao apertar. Passa a '+(std2?std2+' mm':'um mais comprido')+'.','bad');
+  }
+}
+['M3','M4','M5','M6','M8','M10','M12','M16'].forEach(function(n){
+  $('b_chips').append(el('button',{type:'button',text:n,onclick:function(){
+    var m=$('b_in').value.toUpperCase().replace(/\s/g,'').replace(',','.').match(/X(\d+(?:\.\d+)?)$/);
+    $('b_in').value=n+(m?'x'+m[1]:'x25');calcBolt();
+  }}));
+});
+$('b_in').addEventListener('input',calcBolt);
+$('f_t').addEventListener('input',calcFix);
+$('f_mode').addEventListener('change',calcFix);
+$('f_mat').addEventListener('change',calcFix);
+calcBolt();
+
+/* ---------- livro do operário ---------- */
+var KEY='bancada.livro.v1';
+var entries=[],cloud=null,unsub=null,editing=null,migrated=false;
+function loadLocal(){try{var a=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(entries))}catch(e){}}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function dateLabel(s){var p=String(s).split('-');if(p.length!==3)return s;return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'})}
+function newId(){return 'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function setStatus(mode,extra){
+  var t=mode==='cloud'?'Os registos ficam guardados na tua conta e só tu os vês.':'Os registos ficam guardados só neste aparelho. Faz uma cópia de segurança de vez em quando.';
+  $('l_status').textContent=extra||t;
+}
+function dropCloud(){
+  if(unsub)unsub();
+  unsub=null;cloud=null;entries=loadLocal();
+  setStatus('local','Não foi possível guardar na conta. Os registos ficam só neste aparelho.');
+}
+async function putEntry(e){
+  if(cloud){try{await cloud.col.doc(e.id).set(e);return}catch(err){dropCloud()}}
+  var i=entries.findIndex(function(x){return x.id===e.id});
+  if(i>=0)entries[i]=e;else entries.push(e);
+  saveLocal();renderLog();
+}
+async function removeEntry(id){
+  if(cloud){try{await cloud.col.doc(id).delete();return}catch(err){dropCloud()}}
+  entries=entries.filter(function(x){return x.id!==id});
+  saveLocal();renderLog();
+}
+
+function estadoTone(s){return s==='Concluído'?'ok':(s==='Pendente'?'bad':'warn')}
+function renderLog(){
+  var list=$('l_list'),q=$('f_q').value.trim().toLowerCase(),ft=$('f_tipo').value,fe=$('f_est').value;
+  /* tipos para o filtro e equipamentos para a lista de sugestões */
+  var tipos=[];entries.forEach(function(e){if(e.tipo&&tipos.indexOf(e.tipo)<0)tipos.push(e.tipo)});
+  var cur=$('f_tipo').value;
+  $('f_tipo').replaceChildren(el('option',{value:'',text:'Todos'}),tipos.sort().map(function(t){return el('option',{value:t,text:t})}));
+  $('f_tipo').value=tipos.indexOf(cur)>=0?cur:'';
+  ft=$('f_tipo').value;
+  var eqs=[];entries.forEach(function(e){if(e.equip&&eqs.indexOf(e.equip)<0)eqs.push(e.equip)});
+  $('l_equips').replaceChildren(eqs.sort().map(function(x){return el('option',{value:x})}));
+
+  var hours=0,open=0;
+  entries.forEach(function(e){hours+=Number(e.horas)||0;if(e.estado!=='Concluído')open++});
+  $('l_stats').replaceChildren(
+    el('div',{class:'stat'},el('b',{text:String(entries.length)}),el('span',{text:'Registos'})),
+    el('div',{class:'stat'},el('b',{text:fmt(hours)}),el('span',{text:'Horas'})),
+    el('div',{class:'stat'},el('b',{text:String(open)}),el('span',{text:'Por concluir'}))
+  );
+
+  var shown=entries.filter(function(e){
+    if(ft&&e.tipo!==ft)return false;
+    if(fe==='abertos'&&e.estado==='Concluído')return false;
+    if(q){var hay=[e.equip,e.desc,e.pecas,e.tecnico,e.tipo].join(' ').toLowerCase();if(hay.indexOf(q)<0)return false}
+    return true;
+  }).sort(function(a,b){return String(b.data).localeCompare(String(a.data))||(b.criado||0)-(a.criado||0)});
+
+  list.replaceChildren();
+  if(!entries.length){
+    list.append(el('div',{class:'empty'},el('strong',{text:'Ainda não há registos.'}),el('br'),'Preenche o formulário acima para criar o primeiro.'));
+    return;
+  }
+  if(!shown.length){list.append(el('div',{class:'empty',text:'Nenhum registo corresponde ao filtro.'}));return}
+  shown.forEach(function(e){
+    var delBtn=el('button',{type:'button',class:'btn danger small',text:'Apagar'});
+    var armed=false,timer=null;
+    delBtn.addEventListener('click',function(){
+      if(!armed){armed=true;delBtn.textContent='Confirmar apagar';timer=setTimeout(function(){armed=false;delBtn.textContent='Apagar'},3500);return}
+      clearTimeout(timer);removeEntry(e.id);
+    });
+    list.append(el('article',{class:'entry'},
+      el('div',{class:'top'},el('span',{class:'eq',text:e.equip}),el('span',{class:'dt',text:dateLabel(e.data)})),
+      el('div',{class:'meta'},
+        el('span',{class:'chip',text:e.tipo||'—'}),
+        el('span',{class:'chip '+estadoTone(e.estado),text:e.estado||'—'}),
+        e.horas?el('span',{class:'chip',text:fmt(Number(e.horas))+' h'}):null),
+      el('p',{class:'desc',text:e.desc}),
+      e.pecas?el('p',{class:'ex',text:'Material: '+e.pecas}):null,
+      e.tecnico?el('p',{class:'ex',text:'Técnico: '+e.tecnico}):null,
+      el('div',{class:'row'},
+        el('button',{type:'button',class:'btn ghost small',text:'Editar',onclick:function(){startEdit(e)}}),
+        delBtn)
+    ));
+  });
+}
+function resetForm(){
+  editing=null;
+  $('l_form').reset();
+  $('l_data').value=todayStr();
+  $('l_title').textContent='Novo registo';
+  $('l_save').textContent='Guardar registo';
+  $('l_cancel').hidden=true;
+}
+function startEdit(e){
+  editing=e;
+  $('l_data').value=e.data||todayStr();
+  $('l_tipo').value=e.tipo;$('l_equip').value=e.equip||'';$('l_desc').value=e.desc||'';
+  $('l_pecas').value=e.pecas||'';$('l_horas').value=e.horas?String(e.horas).replace('.',','):'';
+  $('l_estado').value=e.estado;$('l_tec').value=e.tecnico||'';
+  $('l_title').textContent='Editar registo';
+  $('l_save').textContent='Guardar alterações';
+  $('l_cancel').hidden=false;
+  $('l_form').scrollIntoView({block:'start'});
+  $('l_equip').focus();
+}
+$('l_cancel').addEventListener('click',resetForm);
+$('l_form').addEventListener('submit',async function(ev){
+  ev.preventDefault();
+  var equip=$('l_equip').value.trim(),desc=$('l_desc').value.trim();
+  if(!equip||!desc){$('l_msg').textContent='Preenche o equipamento e o que foi feito.';return}
+  var h=$('l_horas').value.trim().replace(',','.');
+  var horas=h===''?null:Number(h);
+  if(horas!==null&&!(horas>=0)){$('l_msg').textContent='O tempo tem de ser um número de horas, por exemplo 1,5.';return}
+  var e={
+    id:editing?editing.id:newId(),
+    criado:editing?(editing.criado||Date.now()):Date.now(),
+    data:$('l_data').value||todayStr(),
+    tipo:$('l_tipo').value,equip:equip,desc:desc,
+    pecas:$('l_pecas').value.trim(),horas:horas,
+    estado:$('l_estado').value,tecnico:$('l_tec').value.trim()
+  };
+  var wasEdit=!!editing;
+  $('l_save').disabled=true;
+  await putEntry(e);
+  $('l_save').disabled=false;
+  resetForm();
+  $('l_msg').textContent=wasEdit?'Alterações guardadas.':'Registo guardado.';
+  setTimeout(function(){$('l_msg').textContent=''},3000);
+});
+['f_q','f_tipo','f_est'].forEach(function(id){$(id).addEventListener('input',renderLog)});
+
+/* cópia de segurança */
+$('bk_gen').addEventListener('click',function(){
+  var ta=$('bk_text');
+  ta.value=JSON.stringify(entries.slice().sort(function(a,b){return(a.criado||0)-(b.criado||0)}),null,1);
+  var ok=function(){$('bk_msg').textContent='Texto gerado e copiado.'};
+  var fail=function(){ta.focus();ta.select();$('bk_msg').textContent='Texto gerado. Copia-o à mão.'};
+  try{navigator.clipboard.writeText(ta.value).then(ok,fail)}catch(e){fail()}
+});
+$('bk_res').addEventListener('click',async function(){
+  var msg=$('bk_msg');
+  var arr;
+  try{arr=JSON.parse($('bk_text').value)}catch(e){msg.textContent='O texto não é uma cópia válida.';return}
+  if(!Array.isArray(arr)){msg.textContent='O texto não é uma cópia válida.';return}
+  var good=arr.filter(function(e){return e&&typeof e.id==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(e.id)&&typeof e.equip==='string'&&typeof e.desc==='string'});
+  for(var i=0;i<good.length;i++){
+    var e=good[i];
+    await putEntry({id:e.id,criado:Number(e.criado)||Date.now(),data:String(e.data||todayStr()),tipo:String(e.tipo||'Reparação'),equip:e.equip,desc:e.desc,pecas:String(e.pecas||''),horas:e.horas==null?null:Number(e.horas),estado:String(e.estado||'Concluído'),tecnico:String(e.tecnico||'')});
+  }
+  msg.textContent=good.length+' registos restaurados.';
+});
+
+/* arranque: primeiro o aparelho, depois a conta, se estiver disponível */
+resetForm();
+entries=loadLocal();
+setStatus('local');
+renderLog();
+(async function initCloud(){
+  try{
+    if(!window.claude||!window.claude.use)return;
+    var db=await window.claude.use('db'),user=await window.claude.use('user');
+    if(!db||!user)return;
+    var uid=await user.id();
+    if(!uid)return;
+    var local=loadLocal();
+    var col=db.collection('data/users/'+uid);
+    cloud={col:col};
+    try{migrated=localStorage.getItem(KEY+'.migrado')==='1'}catch(e){}
+    unsub=col.onSnapshot(function(snap){
+      if(snap.metadata&&snap.metadata.fromCache&&snap.empty)return;
+      entries=snap.docs.map(function(d){return Object.assign({},d.data())});
+      setStatus('cloud');
+      renderLog();
+      if(snap.empty&&local.length&&!migrated){
+        migrated=true;
+        try{localStorage.setItem(KEY+'.migrado','1')}catch(e){}
+        local.reduce(function(chain,e){return chain.then(function(){return col.doc(e.id).set(e)})},Promise.resolve()).catch(function(){});
+      }
+    },function(){dropCloud()});
+  }catch(e){cloud=null}
+})();
+})();
+</script>
+
+</body>
+</html>
