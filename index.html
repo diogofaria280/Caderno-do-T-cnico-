@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bancada do Técnico</title>
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<meta name="apple-mobile-web-app-title" content="Bancada">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -133,17 +136,28 @@ td.m{font-family:var(--font-mono)}
 .entry .meta{display:flex;gap:6px;flex-wrap:wrap}
 .entry .desc{white-space:pre-wrap;overflow-wrap:anywhere}
 .entry .ex{font-size:14px;color:var(--muted);overflow-wrap:anywhere}
-.stats{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.stats{display:grid;gap:12px;grid-template-columns:repeat(4,minmax(0,1fr))}
 .stat{border:1px solid var(--line);border-radius:6px;padding:10px 14px;background:var(--surface)}
 .stat b{display:block;font:600 26px var(--font-mono);font-variant-numeric:tabular-nums}
 .stat span{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .empty{border:1px dashed var(--line);border-radius:6px;padding:28px 18px;text-align:center;color:var(--muted)}
 details.card summary{cursor:pointer;font:600 18px var(--font-display);letter-spacing:.03em}
 .foot{font-size:13px;color:var(--muted);max-width:72ch}
+.pv{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.pvbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px));font:600 20px var(--font-display);letter-spacing:.03em}
+.pvact{padding:4px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
+.pvbody{flex:1;overflow:auto;padding:12px max(12px,env(safe-area-inset-right,0px)) 24px max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px;align-items:center;background:var(--line)}
+.pvpage{max-width:100%;box-shadow:0 1px 6px rgba(0,0,0,.25);flex:none}
+.parts{display:flex;flex-direction:column;gap:8px}
+.prow{display:grid;grid-template-columns:minmax(0,2fr) 72px minmax(0,1.4fr) auto;gap:6px;align-items:center}
+.prow .btn{padding:8px 12px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(16px,env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:6px;font-size:14px;z-index:40;max-width:calc(100% - 32px)}
 @media (max-width:520px){
+  .prow{grid-template-columns:72px minmax(0,1fr) auto}
+  .prow .pn{grid-column:1/-1}
   h2{font-size:28px}
   .fields{grid-template-columns:minmax(0,1fr)}
-  .stats{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
@@ -388,35 +402,57 @@ details.card summary{cursor:pointer;font:600 18px var(--font-display);letter-spa
     </div>
     <div class="out" id="f_out" aria-live="polite"></div>
   </div>
-  <p class="foot">Valores segundo ISO 261, ISO 273 e ISO 4017, com rosca métrica normal. Os binários de aperto são indicativos, para rosca seca. Confirma sempre na tabela do fabricante do parafuso e nas instruções da máquina.</p>
+  <p class="foot">Valores segundo ISO 261 e ISO 273, com rosca métrica normal. As chaves seguem a medida DIN, a mais usada em oficina. Os binários de aperto são indicativos, para rosca seca. Confirma sempre na tabela do fabricante do parafuso e nas instruções da máquina.</p>
 </section>
 
 <!-- ===================== LIVRO ===================== -->
 <section id="p-livro" class="panel" hidden>
   <div style="display:flex;flex-direction:column;gap:8px">
     <h2>Livro do Operário</h2>
-    <p class="lead">Regista cada intervenção de manutenção: o quê, onde, com que peças e quanto tempo levou. Fica a tua história por equipamento.</p>
+    <p class="lead">Regista cada intervenção de manutenção: o quê, onde, com que peças e quanto tempo levou. Ao guardar, o relatório de intervenção fica preenchido e pronto a abrir ou descarregar em PDF.</p>
     <p class="foot" id="l_status"></p>
+  </div>
+
+  <div class="card" id="a_card" hidden>
+    <h3>Conta</h3>
+    <div id="a_out">
+      <p class="sub">Entra para guardares o caderno na tua conta e o veres em qualquer aparelho. Sem conta, os registos ficam só neste aparelho.</p>
+      <form id="a_form" class="fields" style="margin-top:12px">
+        <div class="field full"><label for="a_email">Email</label><input id="a_email" type="email" autocomplete="email" inputmode="email" autocapitalize="none" style="font-family:var(--font-body)"></div>
+        <div class="field full"><label for="a_pass">Palavra-passe</label><input id="a_pass" type="password" autocomplete="current-password" style="font-family:var(--font-body)"></div>
+        <div class="row full"><button class="btn" type="submit">Entrar</button><button class="btn ghost" type="button" id="a_signup">Criar conta</button></div>
+      </form>
+    </div>
+    <div id="a_in" hidden>
+      <p>Sessão iniciada como <strong id="a_who"></strong>.</p>
+      <div class="row"><button class="btn ghost small" type="button" id="a_logout">Sair</button></div>
+    </div>
+    <p class="foot" id="a_msg" role="status"></p>
   </div>
 
   <form class="card" id="l_form" autocomplete="off">
     <h3 id="l_title">Novo registo</h3>
     <div class="fields">
       <div class="field"><label for="l_data">Data</label><input id="l_data" type="date" required></div>
-      <div class="field"><label for="l_tipo">Tipo</label>
+      <div class="field"><label for="l_tipo">Tipo de intervenção</label>
         <select id="l_tipo">
-          <option>Manutenção preventiva</option><option>Reparação</option><option>Inspeção</option><option>Instalação</option><option>Ajuste ou calibração</option><option>Melhoria</option>
+          <option>RI</option><option>RG</option><option>RAE</option>
         </select>
       </div>
       <div class="field full"><label for="l_equip">Equipamento ou local</label><input id="l_equip" list="l_equips" placeholder="Compressor 2, Linha 3, Quadro QE-04" required style="font-family:var(--font-body)"></div>
       <datalist id="l_equips"></datalist>
       <div class="field full"><label for="l_desc">O que foi feito</label><textarea id="l_desc" placeholder="Avaria encontrada, o que mediste, o que trocaste, como ficou." required></textarea></div>
-      <div class="field full"><label for="l_pecas">Peças e material usado</label><input id="l_pecas" placeholder="Contactor LC1D09, 2 m de cabo 2,5 mm²" style="font-family:var(--font-body)"></div>
+      <div class="field full"><span class="lbl">Peças e material usado</span>
+        <div id="l_parts" class="parts"></div>
+        <div class="row"><button type="button" class="btn ghost small" id="l_addpart">+ Adicionar peça</button></div>
+      </div>
       <div class="field"><label for="l_horas">Tempo (horas)</label><input id="l_horas" inputmode="decimal" placeholder="1,5"></div>
       <div class="field"><label for="l_estado">Estado</label>
         <select id="l_estado"><option>Concluído</option><option>Pendente</option><option>A aguardar peça</option></select>
       </div>
       <div class="field full"><label for="l_tec">Técnico</label><input id="l_tec" placeholder="Nome" style="font-family:var(--font-body)"></div>
+      <div class="field full"><label for="l_emp">Empresa responsável</label><input id="l_emp" value="CP - Comboios de Portugal" style="font-family:var(--font-body)"></div>
+      <div class="field full"><label for="l_seg">Trabalho a realizar / seguimento</label><textarea id="l_seg" style="min-height:60px" placeholder="Só se ficar algo por fazer"></textarea></div>
     </div>
     <div class="row">
       <button class="btn" type="submit" id="l_save">Guardar registo</button>
@@ -424,6 +460,8 @@ details.card summary{cursor:pointer;font:600 18px var(--font-display);letter-spa
       <span id="l_msg" class="foot" role="status"></span>
     </div>
   </form>
+
+  <div class="card" id="l_rpt" hidden></div>
 
   <div class="stats" id="l_stats"></div>
 
@@ -450,11 +488,28 @@ details.card summary{cursor:pointer;font:600 18px var(--font-display);letter-spa
 </section>
 
 <p class="foot" style="margin-top:28px">Valores de referência para apoio à decisão. Confirma sempre na chapa de características, no manual do fabricante e nas normas e regras de segurança aplicáveis antes de intervir.</p>
+<div id="pv" class="pv" hidden role="dialog" aria-modal="true" aria-labelledby="pv_title">
+  <div class="pvbar">
+    <strong id="pv_title"></strong>
+    <button type="button" class="btn ghost small" id="pv_close">Fechar</button>
+  </div>
+  <div id="pv_actions" class="pvact"></div>
+  <div id="pv_body" class="pvbody"></div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 (function(){
 'use strict';
+
+/* ===== CONFIGURAÇÃO DA BASE DE DADOS (Supabase) =====
+   Troca os dois valores abaixo pelos do teu projeto (Project Settings > API).
+   Enquanto estiverem assim, a app guarda os registos só no aparelho. */
+var SUPABASE_URL='COLOCA-AQUI-O-URL';
+var SUPABASE_KEY='COLOCA-AQUI-A-CHAVE-ANON';
+/* ===================================================== */
 
 /* ---------- utilitários ---------- */
 var $=function(id){return document.getElementById(id)};
@@ -724,25 +779,25 @@ $('p-eletricidade').addEventListener('change',runElec);
 runElec();
 
 /* ---------- serralharia ---------- */
-/* d: [passo normal, furo justo, furo médio, furo largo, chave sextavada, chave Allen, aperto 8.8, aperto 10.9] */
+/* d: [passo normal, furo justo, furo médio, furo largo, chave sextavada (DIN), chave Allen, aperto 8.8, aperto 10.9, chave ISO se diferente] */
 var BOLTS={
-  2:[.4,2.2,2.4,2.6,4,1.5,null,null],
-  2.5:[.45,2.7,2.9,3.1,5,2,null,null],
-  3:[.5,3.2,3.4,3.6,5.5,2.5,1.3,1.8],
-  4:[.7,4.3,4.5,4.8,7,3,3,4.4],
-  5:[.8,5.3,5.5,5.8,8,4,6,8.7],
-  6:[1,6.4,6.6,7,10,5,10,15],
-  8:[1.25,8.4,9,10,13,6,25,36],
-  10:[1.5,10.5,11,12,16,8,49,72],
-  12:[1.75,13,13.5,14.5,18,10,85,125],
-  14:[2,15,15.5,16.5,21,12,135,200],
-  16:[2,17,17.5,18.5,24,14,210,310],
-  18:[2.5,19,20,21,27,14,null,null],
-  20:[2.5,21,22,24,30,17,410,610],
-  22:[2.5,23,24,26,34,17,null,null],
-  24:[3,25,26,28,36,19,710,1050],
-  27:[3,28,30,32,41,19,null,null],
-  30:[3.5,31,33,35,46,22,null,null]
+  2:[.4,2.2,2.4,2.6,4,1.5,null,null,null],
+  2.5:[.45,2.7,2.9,3.1,5,2,null,null,null],
+  3:[.5,3.2,3.4,3.6,5.5,2.5,1.3,1.8,null],
+  4:[.7,4.3,4.5,4.8,7,3,3,4.4,null],
+  5:[.8,5.3,5.5,5.8,8,4,6,8.7,null],
+  6:[1,6.4,6.6,7,10,5,10,15,null],
+  8:[1.25,8.4,9,10,13,6,25,36,null],
+  10:[1.5,10.5,11,12,17,8,49,72,16],
+  12:[1.75,13,13.5,14.5,19,10,85,125,18],
+  14:[2,15,15.5,16.5,22,12,135,200,21],
+  16:[2,17,17.5,18.5,24,14,210,310,null],
+  18:[2.5,19,20,21,27,14,null,null,null],
+  20:[2.5,21,22,24,30,17,410,610,null],
+  22:[2.5,23,24,26,32,17,null,null,34],
+  24:[3,25,26,28,36,19,710,1050,null],
+  27:[3,28,30,32,41,19,null,null,null],
+  30:[3.5,31,33,35,46,22,null,null,null]
 };
 var FINE={8:[1],10:[1.25,1],12:[1.5,1.25],14:[1.5],16:[1.5],18:[2,1.5],20:[2,1.5],22:[2,1.5],24:[2],27:[2],30:[2]};
 var STD_LEN=[6,8,10,12,16,20,25,30,35,40,45,50,55,60,65,70,80,90,100,110,120,130,140,150,160,180,200];
@@ -777,7 +832,7 @@ function calcBolt(){
     rcard('Passo da rosca',fmt2(pitch)+' mm',pitchNote+(p==null&&fine.length?' Finos: '+fine.map(fmt2).join(' ou ')+' mm.':'')),
     rcard('Broca para rosca (macho)','Ø '+fmt2(drill)+' mm','Furo antes de abrir a rosca com o macho: '+dd+' − '+fmt2(pitch)+' mm.'),
     rcard('Furo de passagem','Ø '+fmt2(row[2])+' mm','Justo '+fmt2(row[1])+' · Médio '+fmt2(row[2])+' · Largo '+fmt2(row[3])+' mm (ISO 273). O médio serve na maioria dos casos.'),
-    rcard('Chave',fmt2(row[4])+' mm','Sextavado exterior ISO. Sextavado interior (Allen): '+fmt2(row[5])+' mm. Parafusos DIN antigos podem ter 1 mm a mais em M10, M12 e M14.')
+    rcard('Chave',fmt2(row[4])+' mm','Sextavado exterior, medida DIN (a mais usada).'+(row[8]?' Pela ISO: '+fmt2(row[8])+' mm.':'')+' Sextavado interior (Allen): '+fmt2(row[5])+' mm.'),
   ];
   var tq=el('div',{class:'rc'});
   tq.append(el('span',{class:'k',text:'Binário de aperto'}));
@@ -830,33 +885,448 @@ calcBolt();
 
 /* ---------- livro do operário ---------- */
 var KEY='bancada.livro.v1';
-var entries=[],cloud=null,unsub=null,editing=null,migrated=false;
+var entries=[],cloud=null,sb=null,editing=null;
 function loadLocal(){try{var a=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
 function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(entries))}catch(e){}}
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function dateLabel(s){var p=String(s).split('-');if(p.length!==3)return s;return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'})}
 function newId(){return 'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
-function setStatus(mode,extra){
-  var t=mode==='cloud'?'Os registos ficam guardados na tua conta e só tu os vês.':'Os registos ficam guardados só neste aparelho. Faz uma cópia de segurança de vez em quando.';
+function setStatus(extra){
+  var t;
+  if(cloud)t='Os registos ficam guardados na tua conta e só tu os vês. Aparecem em qualquer aparelho onde entrares.';
+  else if(sb)t='Não iniciaste sessão. Os registos ficam só neste aparelho. Entra na conta, acima, para os guardares online.';
+  else t='Os registos ficam guardados só neste aparelho. Faz uma cópia de segurança de vez em quando.';
   $('l_status').textContent=extra||t;
 }
-function dropCloud(){
-  if(unsub)unsub();
-  unsub=null;cloud=null;entries=loadLocal();
-  setStatus('local','Não foi possível guardar na conta. Os registos ficam só neste aparelho.');
-}
-async function putEntry(e){
-  if(cloud){try{await cloud.col.doc(e.id).set(e);return}catch(err){dropCloud()}}
+function upsertLocalArr(e){
   var i=entries.findIndex(function(x){return x.id===e.id});
   if(i>=0)entries[i]=e;else entries.push(e);
-  saveLocal();renderLog();
+}
+async function putEntry(e){
+  if(cloud){
+    var r=await sb.from('entries').upsert({user_id:cloud.id,id:e.id,data:e,updated_at:new Date().toISOString()},{onConflict:'user_id,id'});
+    if(r.error){$('l_msg').textContent='Não foi possível guardar na conta. Verifica a ligação e tenta outra vez.';return false}
+  }
+  upsertLocalArr(e);
+  if(!cloud)saveLocal();
+  renderLog();
+  return true;
 }
 async function removeEntry(id){
-  if(cloud){try{await cloud.col.doc(id).delete();return}catch(err){dropCloud()}}
+  if(cloud){
+    var r=await sb.from('entries').delete().eq('id',id);
+    if(r.error){$('l_msg').textContent='Não foi possível apagar. Tenta outra vez.';return}
+  }
   entries=entries.filter(function(x){return x.id!==id});
-  saveLocal();renderLog();
+  if(!cloud)saveLocal();
+  renderLog();
+}
+async function loadCloud(){
+  var r=await sb.from('entries').select('data');
+  if(r.error){setStatus('Não foi possível ler os registos da conta. Tenta outra vez mais tarde.');return false}
+  entries=r.data.map(function(x){return x.data});
+  return true;
+}
+async function migrateLocal(){
+  var flag=KEY+'.migrado.'+cloud.id,done=false;
+  try{done=localStorage.getItem(flag)==='1'}catch(e){}
+  var local=loadLocal();
+  if(done||!local.length)return;
+  var rows=local.map(function(e){return{user_id:cloud.id,id:e.id,data:e}});
+  var r=await sb.from('entries').upsert(rows,{onConflict:'user_id,id'});
+  if(!r.error){try{localStorage.setItem(flag,'1')}catch(e){}await loadCloud()}
+}
+function authMsg(t){$('a_msg').textContent=t||''}
+function showAuth(){
+  $('a_card').hidden=!sb;
+  $('a_out').hidden=!!cloud;
+  $('a_in').hidden=!cloud;
+  if(cloud)$('a_who').textContent=cloud.email||'a tua conta';
+}
+async function onSession(session){
+  if(session&&session.user){
+    cloud={id:session.user.id,email:session.user.email};
+    if(await loadCloud())await migrateLocal();
+  }else{
+    cloud=null;entries=loadLocal();
+  }
+  showAuth();setStatus();renderLog();
 }
 
+/* ---------- relatório de intervenção em PDF (gerado no aparelho, sem bibliotecas) ---------- */
+var HW={"r":[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,761,556,278,222,556,333,1000,556,556,333,1000,667,333,1000,278,611,278,278,222,222,333,333,350,556,1000,333,1000,500,333,944,278,500,667,278,333,556,556,556,556,260,556,333,737,370,556,584,333,737,333,400,584,333,333,333,556,537,278,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,584,611,556,556,556,556,500,556,500],"b":[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,761,556,278,278,556,500,1000,556,556,333,1000,667,333,1000,278,611,278,278,278,278,500,500,350,556,1000,333,1000,556,333,944,278,500,667,278,333,556,556,556,556,280,556,333,737,370,556,584,333,737,333,400,584,333,333,333,611,556,278,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,584,611,611,611,611,611,556,611,556]};
+var CP1252_80='€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008dŽ\u008f\u0090‘’“”•–—˜™š›œ\u009džŸ';
+function encStr(s){
+  var out=[];
+  for(var i=0;i<s.length;i++){
+    var c=s.charCodeAt(i);
+    if((c>=32&&c<127)||(c>=160&&c<256))out.push(c);
+    else if(c===10||c===13||c===9)out.push(32);
+    else{var k=CP1252_80.indexOf(s.charAt(i));out.push(k>=0?128+k:63)}
+  }
+  return out;
+}
+function sw(s,bold,size){
+  var t=bold?HW.b:HW.r,sum=0,b=encStr(s);
+  for(var i=0;i<b.length;i++)sum+=b[i]>=32?(t[b[i]-32]||0):0;
+  return sum*size/1000;
+}
+function wrapText(s,bold,size,maxw){
+  var out=[];
+  String(s).split(/\r?\n/).forEach(function(par){
+    var words=par.split(/\s+/).filter(Boolean),cur='';
+    if(!words.length){out.push('');return}
+    words.forEach(function(w){
+      var t=cur?cur+' '+w:w;
+      if(sw(t,bold,size)<=maxw){cur=t;return}
+      if(cur)out.push(cur);
+      while(sw(w,bold,size)>maxw&&w.length>1){
+        var k=w.length;
+        while(k>1&&sw(w.slice(0,k),bold,size)>maxw)k--;
+        out.push(w.slice(0,k));w=w.slice(k);
+      }
+      cur=w;
+    });
+    out.push(cur);
+  });
+  return out;
+}
+function PdfDoc(){this.W=595.28;this.H=841.89;this.pages=[];this.c=null}
+PdfDoc.prototype.page=function(){this.c=[];this.pages.push(this.c)};
+function n2(n){return String(Math.round(n*100)/100)}
+function pcol(h){var v=parseInt(h.slice(1),16);return n2(((v>>16)&255)/255)+' '+n2(((v>>8)&255)/255)+' '+n2((v&255)/255)}
+PdfDoc.prototype.rect=function(x,t,w,h,o){this.c.push({t:'r',x:x,y:t,w:w,h:h,o:o||{}})};
+PdfDoc.prototype.line=function(x1,t1,x2,t2,color,lw){this.c.push({t:'l',a:[x1,t1,x2,t2],color:color,lw:lw||.8})};
+PdfDoc.prototype.text=function(s,x,base,o){
+  o=o||{};
+  var size=o.size||10,bold=!!o.bold,w=sw(s,bold,size);
+  if(o.align==='center')x-=w/2;else if(o.align==='right')x-=w;
+  this.c.push({t:'t',s:s,x:x,y:base,size:size,bold:bold,color:o.color||'#14212b'});
+};
+PdfDoc.prototype.tick=function(x0,t0,x1,t1,color){this.c.push({t:'k',a:[x0,t0,x1,t1],color:color})};
+PdfDoc.prototype.pdfOp=function(o){
+  var H=this.H,a,q,s;
+  if(o.t==='r'){
+    q=o.o;s='q ';
+    if(q.fill)s+=pcol(q.fill)+' rg ';
+    if(q.stroke)s+=pcol(q.stroke)+' RG '+n2(q.lw||.8)+' w ';
+    return s+n2(o.x)+' '+n2(H-o.y-o.h)+' '+n2(o.w)+' '+n2(o.h)+' re '+((q.fill&&q.stroke)?'B':(q.fill?'f':'S'))+' Q';
+  }
+  if(o.t==='l'){a=o.a;return 'q '+pcol(o.color)+' RG '+n2(o.lw)+' w '+n2(a[0])+' '+n2(H-a[1])+' m '+n2(a[2])+' '+n2(H-a[3])+' l S Q'}
+  if(o.t==='t'){
+    var hex=encStr(o.s).map(function(b){return (b<16?'0':'')+b.toString(16)}).join('');
+    return 'BT /'+(o.bold?'F2':'F1')+' '+n2(o.size)+' Tf '+pcol(o.color)+' rg '+n2(o.x)+' '+n2(H-o.y)+' Td <'+hex+'> Tj ET';
+  }
+  a=o.a;var w=a[2]-a[0],h=a[3]-a[1];
+  return 'q 1 J 1 j '+pcol(o.color)+' RG 1.5 w '+n2(a[0]+w*.2)+' '+n2(H-(a[1]+h*.55))+' m '+n2(a[0]+w*.42)+' '+n2(H-(a[1]+h*.8))+' l '+n2(a[0]+w*.84)+' '+n2(H-(a[1]+h*.2))+' l S Q';
+};
+PdfDoc.prototype.draw=function(i,cv,cssW){
+  var k=cssW/this.W,r=window.devicePixelRatio||1,ctx=cv.getContext('2d');
+  cv.width=Math.round(cssW*r);cv.height=Math.round(this.H*k*r);
+  cv.style.width=cssW+'px';cv.style.height=(this.H*k)+'px';
+  ctx.setTransform(k*r,0,0,k*r,0,0);
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,this.W,this.H);
+  this.pages[i].forEach(function(o){
+    if(o.t==='r'){
+      if(o.o.fill){ctx.fillStyle=o.o.fill;ctx.fillRect(o.x,o.y,o.w,o.h)}
+      if(o.o.stroke){ctx.strokeStyle=o.o.stroke;ctx.lineWidth=o.o.lw||.8;ctx.strokeRect(o.x,o.y,o.w,o.h)}
+    }else if(o.t==='l'){
+      ctx.strokeStyle=o.color;ctx.lineWidth=o.lw;ctx.beginPath();ctx.moveTo(o.a[0],o.a[1]);ctx.lineTo(o.a[2],o.a[3]);ctx.stroke();
+    }else if(o.t==='t'){
+      ctx.fillStyle=o.color;ctx.font=(o.bold?'bold ':'')+o.size+'px Helvetica,Arial,sans-serif';ctx.fillText(o.s,o.x,o.y);
+    }else{
+      var a=o.a,w=a[2]-a[0],h=a[3]-a[1];
+      ctx.strokeStyle=o.color;ctx.lineWidth=1.5;ctx.lineCap='round';ctx.lineJoin='round';
+      ctx.beginPath();ctx.moveTo(a[0]+w*.2,a[1]+h*.55);ctx.lineTo(a[0]+w*.42,a[1]+h*.8);ctx.lineTo(a[0]+w*.84,a[1]+h*.2);ctx.stroke();
+    }
+  });
+};
+PdfDoc.prototype.bytes=function(){
+  var objs=[],n=this.pages.length,kids=[],i;
+  for(i=0;i<n;i++)kids.push((5+i*2)+' 0 R');
+  objs[1]='<< /Type /Catalog /Pages 2 0 R >>';
+  objs[2]='<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+n+' >>';
+  objs[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+  objs[4]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+  for(i=0;i<n;i++){
+    var self=this,content=this.pages[i].map(function(o){return self.pdfOp(o)}).join('\n');
+    objs[5+i*2]='<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+this.W+' '+this.H+'] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents '+(6+i*2)+' 0 R >>';
+    objs[6+i*2]='<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream';
+  }
+  var out='%PDF-1.4\n',offs=[];
+  for(i=1;i<objs.length;i++){offs[i]=out.length;out+=i+' 0 obj\n'+objs[i]+'\nendobj\n'}
+  var xr=out.length;
+  out+='xref\n0 '+objs.length+'\n0000000000 65535 f \n';
+  for(i=1;i<objs.length;i++)out+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+  out+='trailer\n<< /Size '+objs.length+' /Root 1 0 R /Info << /Title (Relatorio de intervencao) >> >>\nstartxref\n'+xr+'\n%%EOF';
+  var u=new Uint8Array(out.length);
+  for(i=0;i<out.length;i++)u[i]=out.charCodeAt(i)&255;
+  return u;
+};
+
+function pad2(n){return String(n).padStart(2,'0')}
+function fmtYMD(s){var m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:String(s||'—')}
+function parseParts(s){
+  return String(s||'').split(/[\n;,]+/).map(function(x){return x.trim()}).filter(Boolean).map(function(x){
+    var m=x.match(/^(\d+(?:[.,]\d+)?)\s*[x×]\s*(\D.*)$/i);
+    var cap=function(t){return t.charAt(0).toUpperCase()+t.slice(1)};
+    return m?{n:cap(m[2].trim()),q:m[1].replace('.',',')}:{n:cap(x),q:''};
+  });
+}
+function buildReport(e){
+  var d=new PdfDoc(),X0=51,X1=544.3,BOT=790;
+  var INK='#14212b',SL='#55646f',BD='#c5cfd6',HF='#f3f5f6',AC='#b8400a',FILL='#0f2a47';
+  var y=0;
+  function np(top){d.page();y=top}
+  function need(h){if(y+h>BOT)np(60)}
+  function cells(cols,h,grey){
+    for(var i=0;i<cols.length-1;i++)d.rect(cols[i],y,cols[i+1]-cols[i],h,{fill:grey?HF:null,stroke:BD,lw:.8});
+  }
+  function labels(cols,arr,h){
+    arr.forEach(function(l,i){
+      var ls=l.split('\n');
+      ls.forEach(function(t,k){d.text(t,cols[i]+7,y+h/2+(ls.length>1?(k?7.6:-1.6):2.8),{size:7.5,bold:true,color:SL})});
+    });
+  }
+  function cb(x,top,label,on,size){
+    d.rect(x,top,7.5,8.5,{stroke:SL,lw:.9});
+    if(on)d.tick(x,top,x+7.5,top+8.5,FILL);
+    d.text(label,x+11,top+7.6,{size:size||10,color:INK});
+  }
+  function sec(title,hint){
+    need(70);
+    y+=9.7;
+    d.text(title,57,y+8,{size:10,bold:true,color:AC});
+    if(hint){d.text(hint,57,y+24,{size:8,color:SL});y+=26.3}else y+=16.3;
+  }
+  function textBox(text,minH,size,lh){
+    var lines=wrapText(text||'—',false,size,X1-X0-16),i=0,first=true;
+    while(first||i<lines.length){
+      need(46);
+      var fit=Math.max(1,Math.floor((BOT-y-16)/lh));
+      var chunk=lines.slice(i,i+fit);i+=chunk.length;
+      var h=Math.max(chunk.length*lh+16,(first&&i>=lines.length)?minH:0);
+      d.rect(X0,y,X1-X0,h,{stroke:BD,lw:.8});
+      chunk.forEach(function(l,k){d.text(l,X0+8,y+8+size*.85+k*lh,{size:size,color:FILL})});
+      y+=h;first=false;
+      if(i<lines.length)np(60);
+    }
+  }
+  var estados=['Concluído','Pendente','A aguardar peça'];
+  var estado=String(e.estado||'').normalize('NFC');
+  var rd=e.criado?new Date(e.criado):null;
+  var rdate=rd?pad2(rd.getDate())+'/'+pad2(rd.getMonth()+1)+'/'+rd.getFullYear():fmtYMD(e.data);
+
+  /* cabeçalho */
+  np(0);
+  d.text('BANCADA DO TÉCNICO',57,59.5,{size:8,color:SL});
+  d.text('Relatório de intervenção',57,80,{size:20,bold:true,color:INK});
+  d.text('Ficha individual de equipamento · gerada a partir do Livro do Operário.',57,96.5,{size:9,color:SL});
+  d.line(57,111,538,111,AC,2);
+  y=119;
+
+  var c3=[X0,207,343,X1];
+  cells(c3,23,true);labels(c3,['N.º DO RELATÓRIO','DATA DO RELATÓRIO','ESTADO'],23);y+=23;
+  cells(c3,34,false);
+  d.text(e.num||'—',58,y+21,{size:11,bold:true,color:FILL});
+  d.text(rdate,214,y+21,{size:11,bold:true,color:FILL});
+  cb(347,y+12,estados[0],estado===estados[0],9);
+  cb(403,y+12,estados[1],estado===estados[1],9);
+  cb(459,y+12,estados[2],estado===estados[2],9);
+  y+=34;
+
+  /* 1. identificação */
+  sec('1. Identificação do equipamento e da intervenção');
+  var c2=[X0,298,X1];
+  cells(c2,20,true);labels(c2,['EQUIPAMENTO / LOCAL','DATA DA INTERVENÇÃO'],20);y+=20;
+  var eq=wrapText(e.equip||'—',true,11,233);
+  var h=Math.max(34,14+eq.length*14);
+  cells(c2,h,false);
+  eq.forEach(function(l,k){d.text(l,58,y+20+k*14,{size:11,bold:true,color:FILL})});
+  d.text(fmtYMD(e.data),305,y+20,{size:11,bold:true,color:FILL});
+  y+=h;
+  cells(c2,20,true);labels(c2,['TIPO DE INTERVENÇÃO','TÉCNICO RESPONSÁVEL'],20);y+=20;
+  var isCode=['RI','RG','RAE'].indexOf(e.tipo)>=0,code=isCode?e.tipo:(e.classe||'');
+  var tp=isCode?[]:wrapText(e.tipo||'—',true,10.5,233);
+  var tcl=wrapText(e.tecnico||'—',true,11,233);
+  h=54+(Math.max(tp.length,1)-1)*13;
+  cells(c2,h,false);
+  tp.forEach(function(l,k){d.text(l,58,y+19+k*13,{size:10.5,bold:true,color:FILL})});
+  var cbTop=tp.length?y+19+(tp.length-1)*13+9:y+22;
+  cb(58,cbTop,'RI',code==='RI');cb(94,cbTop,'RG',code==='RG');cb(130,cbTop,'RAE',code==='RAE');
+  tcl.forEach(function(l,k){d.text(l,305,y+22+k*14,{size:11,bold:true,color:FILL})});
+  y+=h;
+
+  /* 2. descrição */
+  sec('2. Descrição do trabalho realizado','Descrever a anomalia encontrada, verificações efetuadas, medições relevantes, trabalho executado e resultado após a intervenção.');
+  textBox(e.desc,80,10,13);
+
+  /* 3. peças */
+  sec('3. Peças, materiais e consumíveis utilizados','Indicar referência, designação e quantidade, sempre que aplicável.');
+  var c4=[X0,283,374,X1];
+  function partsHeader(){cells(c4,22,true);labels(c4,['REFERÊNCIA / DESIGNAÇÃO','QUANTIDADE','OBSERVAÇÕES'],22);y+=22}
+  partsHeader();
+  var cap=function(t){return t.charAt(0).toUpperCase()+t.slice(1)};
+  var parts=(Array.isArray(e.pecasLista)&&e.pecasLista.length)?e.pecasLista.map(function(p){return{n:cap(p.n||'—'),q:p.q||'',o:p.o||''}}):parseParts(e.pecas);
+  if(!parts.length)parts=[{n:'Sem peças registadas',q:'',none:true}];
+  parts.forEach(function(p){
+    var ls=wrapText(p.n,false,9,221),ql=p.q?wrapText(p.q,true,10,77):[],ob=p.o?wrapText(p.o,false,9,156):[];
+    var rh=Math.max(26,Math.max(ls.length,ql.length,ob.length)*11+12);
+    if(y+rh>BOT){np(60);partsHeader()}
+    cells(c4,rh,false);
+    function col(lines,x,o){var st=y+(rh-lines.length*11)/2+8.5;lines.forEach(function(l,k){d.text(l,x,st+k*11,o)})}
+    col(ls,58,{size:9,color:p.none?SL:FILL});
+    col(ql,290,{size:10,bold:true,color:FILL});
+    col(ob,381,{size:9,color:FILL});
+    y+=rh;
+  });
+
+  /* 4. tempo e estado */
+  need(130);
+  sec('4. Tempo e estado final');
+  var c5=[X0,235,X1];
+  cells(c5,20,true);labels(c5,['TEMPO TOTAL (HORAS)','ESTADO APÓS A INTERVENÇÃO'],20);y+=20;
+  cells(c5,31,false);
+  var hrs=(e.horas==null||e.horas==='')?'—':String(e.horas).replace('.',',');
+  d.text(hrs,58,y+20,{size:11,bold:true,color:FILL});
+  cb(242,y+11,estados[0],estado===estados[0]);cb(305.8,y+11,estados[1],estado===estados[1]);cb(367.3,y+11,estados[2],estado===estados[2]);
+  y+=31;
+  var sg=wrapText(e.seg||'',false,9.5,X1-235-14);
+  h=Math.max(34,14+sg.length*12.5);
+  need(h);
+  d.rect(X0,y,184,h,{fill:HF,stroke:BD,lw:.8});d.rect(235,y,X1-235,h,{stroke:BD,lw:.8});
+  d.text('TRABALHO A REALIZAR / SEGUIMENTO',58,y+14,{size:7.5,bold:true,color:SL});
+  d.text('NECESSÁRIO',58,y+23,{size:7.5,bold:true,color:SL});
+  if(e.seg)sg.forEach(function(l,k){d.text(l,242,y+17+k*12.5,{size:9.5,color:FILL})});
+  y+=h;
+
+  /* assinaturas */
+  need(160);
+  y+=22;
+  var cs=[X0,297.5,X1];
+  cells(cs,22,true);labels(cs,['TÉCNICO RESPONSÁVEL','EMPRESA RESPONSÁVEL'],22);y+=22;
+  cells(cs,56,false);
+  [[X0,e.tecnico||''],[297.5,e.emp||'']].forEach(function(p){
+    d.text('Assinatura:',p[0]+7,y+27,{size:9,color:INK});
+    d.line(p[0]+64,y+28,p[0]+(cs[1]-X0)-10,y+28,SL,.8);
+    d.text(p[1],p[0]+7,y+46,{size:9,color:FILL});
+  });
+  y+=56;
+  cells(cs,26,false);
+  [X0,297.5].forEach(function(px){d.text('Data: ____ / ____ / ______',px+7,y+16,{size:9,color:INK})});
+  y+=26;
+  y+=14;
+  wrapText('Nota: este relatório organiza a informação do Livro do Operário. Deve ser complementado com os procedimentos de segurança, medições, critérios de aceitação e documentação técnica aplicáveis ao equipamento.',false,8,X1-X0-12).forEach(function(l,k){d.text(l,57,y+k*10,{size:8,color:SL})});
+
+  /* rodapé */
+  var total=d.pages.length;
+  d.pages.forEach(function(pg,i){
+    d.c=pg;
+    d.line(X0,799,X1,799,BD,.8);
+    d.text('Bancada do Técnico | Relatório de intervenção'+(e.num?' | N.º '+e.num:''),X0,813.6,{size:7.5,color:SL});
+    d.text('Página '+(i+1)+' de '+total,X1,813.6,{size:7.5,color:SL,align:'right'});
+  });
+  return d;
+}
+
+/* ---------- relatório: botões abrir, descarregar e partilhar ---------- */
+var toastT=null;
+function toast(t){var b=$('toast');b.textContent=t;b.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){b.hidden=true},4000)}
+function lastEmp(){var d='CP - Comboios de Portugal';try{return localStorage.getItem('bancada.emp')||d}catch(x){return d}}
+function nextNum(criado){
+  var yr=new Date(criado||Date.now()).getFullYear(),max=0;
+  entries.forEach(function(x){var m=String(x.num||'').match(/^(\d{4})-(\d+)$/);if(m&&+m[1]===yr&&+m[2]>max)max=+m[2]});
+  return yr+'-'+String(max+1).padStart(3,'0');
+}
+function withNum(e){
+  if(e.num)return e;
+  var c=Object.assign({},e);c.num=nextNum(c.criado);
+  putEntry(c);
+  return c;
+}
+function pdfFor(e){
+  e=withNum(e);
+  var slug=String(e.equip||'registo').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'registo';
+  var blob=new Blob([buildReport(e).bytes()],{type:'application/pdf'});
+  return{blob:blob,name:'Relatorio-'+slug+'-'+e.num+'.pdf'};
+}
+function openPdf(e){showPreview(e)}
+function showPreview(e){
+  var doc;
+  try{e=withNum(e);doc=buildReport(e)}catch(x){toast('Não foi possível gerar o relatório.');return}
+  var body=$('pv_body');body.replaceChildren();
+  var w=Math.min(Math.max(window.innerWidth-24,240),820);
+  for(var i=0;i<doc.pages.length;i++){var cv=document.createElement('canvas');cv.className='pvpage';doc.draw(i,cv,w);body.append(cv)}
+  $('pv_title').textContent='Relatório N.º '+e.num;
+  $('pv_actions').replaceChildren(reportButtons(e,true));
+  $('pv').hidden=false;document.body.style.overflow='hidden';body.scrollTop=0;
+}
+function closePreview(){$('pv').hidden=true;document.body.style.overflow=''}
+function reportButtons(e,inPreview){
+  var row=el('div',{class:'row'});
+  if(!inPreview)row.append(el('button',{type:'button',class:'btn small',text:'Ver relatório',onclick:function(){showPreview(e)}}));
+  if(canShareFiles())row.append(el('button',{type:'button',class:inPreview?'btn small':'btn ghost small',text:'Guardar ou partilhar',onclick:function(){sharePdf(e)}}));
+  row.append(el('button',{type:'button',class:'btn ghost small',text:'Descarregar PDF',onclick:function(){downloadPdf(e)}}));
+  return row;
+}
+function reportRow(e){return reportButtons(e,false)}
+async function downloadPdf(e){
+  var p;try{p=pdfFor(e)}catch(x){toast('Não foi possível gerar o relatório.');return}
+  try{
+    if(window.claude&&window.claude.use){
+      var dl=await window.claude.use('downloads');
+      if(dl){
+        try{await dl.save({filename:p.name,data:p.blob});toast('Relatório guardado.')}
+        catch(x){if(!x||x.code!=='declined')toast('Não foi possível guardar o relatório.')}
+        return;
+      }
+    }
+  }catch(x){}
+  var url=URL.createObjectURL(p.blob),a=document.createElement('a');
+  a.href=url;a.download=p.name;document.body.append(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url)},120000);
+  toast('Se o PDF não aparecer nos Ficheiros, usa Guardar ou partilhar.');
+}
+function canShareFiles(){
+  try{return !!(navigator.share&&navigator.canShare&&navigator.canShare({files:[new File([new Blob(['x'],{type:'application/pdf'})],'a.pdf',{type:'application/pdf'})]}))}catch(x){return false}
+}
+async function sharePdf(e){
+  var p;try{p=pdfFor(e)}catch(x){toast('Não foi possível gerar o relatório.');return}
+  try{await navigator.share({files:[new File([p.blob],p.name,{type:'application/pdf'})],title:p.name})}
+  catch(x){if(!x||x.name!=='AbortError')toast('Não foi possível partilhar. Usa Descarregar PDF.')}
+}
+function showReport(e){
+  var box=$('l_rpt');
+  box.replaceChildren(
+    el('h3',{text:'Relatório pronto'}),
+    el('p',{class:'sub',text:'N.º '+(e.num||'—')+' · '+(e.equip||'')+'. Preenchido com os dados deste registo.'}),
+    reportRow(e));
+  box.hidden=false;
+  try{box.scrollIntoView({block:'center'})}catch(x){}
+}
+function isDone(e){return String(e.estado||'').normalize('NFC').trim().toLowerCase()==='concluído'}
+
+/* peças: uma linha por peça, com designação, quantidade e observações */
+function addPartRow(p){
+  p=p||{};
+  var row=el('div',{class:'prow'},
+    el('input',{class:'pn',placeholder:'Referência / designação','aria-label':'Referência ou designação da peça',value:p.n||'',style:'font-family:var(--font-body)'}),
+    el('input',{class:'pq',placeholder:'Qtd.',inputmode:'decimal','aria-label':'Quantidade',value:p.q||''}),
+    el('input',{class:'po',placeholder:'Observações','aria-label':'Observações da peça',value:p.o||'',style:'font-family:var(--font-body)'}),
+    el('button',{type:'button',class:'btn ghost small pdel','aria-label':'Remover peça',text:'×',onclick:function(){row.remove();if(!$('l_parts').children.length)addPartRow()}}));
+  $('l_parts').append(row);
+  return row;
+}
+function readParts(){
+  return Array.prototype.map.call($('l_parts').children,function(r){
+    return{n:r.querySelector('.pn').value.trim(),q:r.querySelector('.pq').value.trim(),o:r.querySelector('.po').value.trim()};
+  }).filter(function(p){return p.n||p.q||p.o});
+}
+function setParts(list){
+  $('l_parts').replaceChildren();
+  (list&&list.length?list:[{}]).forEach(addPartRow);
+}
+function partsText(l){return l.map(function(p){return (p.n||'—')+(p.q?' ('+p.q+')':'')}).join(', ')}
 function estadoTone(s){return s==='Concluído'?'ok':(s==='Pendente'?'bad':'warn')}
 function renderLog(){
   var list=$('l_list'),q=$('f_q').value.trim().toLowerCase(),ft=$('f_tipo').value,fe=$('f_est').value;
@@ -869,12 +1339,13 @@ function renderLog(){
   var eqs=[];entries.forEach(function(e){if(e.equip&&eqs.indexOf(e.equip)<0)eqs.push(e.equip)});
   $('l_equips').replaceChildren(eqs.sort().map(function(x){return el('option',{value:x})}));
 
-  var hours=0,open=0;
-  entries.forEach(function(e){hours+=Number(e.horas)||0;if(e.estado!=='Concluído')open++});
+  var hours=0,done=0;
+  entries.forEach(function(e){hours+=Number(e.horas)||0;if(isDone(e))done++});
   $('l_stats').replaceChildren(
     el('div',{class:'stat'},el('b',{text:String(entries.length)}),el('span',{text:'Registos'})),
-    el('div',{class:'stat'},el('b',{text:fmt(hours)}),el('span',{text:'Horas'})),
-    el('div',{class:'stat'},el('b',{text:String(open)}),el('span',{text:'Por concluir'}))
+    el('div',{class:'stat'},el('b',{text:String(done)}),el('span',{text:'Concluídos'})),
+    el('div',{class:'stat'},el('b',{text:String(entries.length-done)}),el('span',{text:'Por concluir'})),
+    el('div',{class:'stat'},el('b',{text:fmt(hours)}),el('span',{text:'Horas'}))
   );
 
   var shown=entries.filter(function(e){
@@ -902,10 +1373,12 @@ function renderLog(){
       el('div',{class:'meta'},
         el('span',{class:'chip',text:e.tipo||'—'}),
         el('span',{class:'chip '+estadoTone(e.estado),text:e.estado||'—'}),
-        e.horas?el('span',{class:'chip',text:fmt(Number(e.horas))+' h'}):null),
+        e.horas?el('span',{class:'chip',text:fmt(Number(e.horas))+' h'}):null,
+        e.num?el('span',{class:'chip',text:'N.º '+e.num}):null),
       el('p',{class:'desc',text:e.desc}),
       e.pecas?el('p',{class:'ex',text:'Material: '+e.pecas}):null,
       e.tecnico?el('p',{class:'ex',text:'Técnico: '+e.tecnico}):null,
+      reportRow(e),
       el('div',{class:'row'},
         el('button',{type:'button',class:'btn ghost small',text:'Editar',onclick:function(){startEdit(e)}}),
         delBtn)
@@ -915,7 +1388,9 @@ function renderLog(){
 function resetForm(){
   editing=null;
   $('l_form').reset();
+  setParts();
   $('l_data').value=todayStr();
+  $('l_emp').value=lastEmp();
   $('l_title').textContent='Novo registo';
   $('l_save').textContent='Guardar registo';
   $('l_cancel').hidden=true;
@@ -923,9 +1398,11 @@ function resetForm(){
 function startEdit(e){
   editing=e;
   $('l_data').value=e.data||todayStr();
+  if(e.tipo&&!Array.prototype.some.call($('l_tipo').options,function(o){return o.value===e.tipo}))$('l_tipo').append(el('option',{value:e.tipo,text:e.tipo}));
   $('l_tipo').value=e.tipo;$('l_equip').value=e.equip||'';$('l_desc').value=e.desc||'';
-  $('l_pecas').value=e.pecas||'';$('l_horas').value=e.horas?String(e.horas).replace('.',','):'';
+  setParts(Array.isArray(e.pecasLista)&&e.pecasLista.length?e.pecasLista:parseParts(e.pecas).map(function(x){return{n:x.n,q:x.q,o:''}}));$('l_horas').value=e.horas?String(e.horas).replace('.',','):'';
   $('l_estado').value=e.estado;$('l_tec').value=e.tecnico||'';
+  $('l_emp').value=e.emp||'';$('l_seg').value=e.seg||'';
   $('l_title').textContent='Editar registo';
   $('l_save').textContent='Guardar alterações';
   $('l_cancel').hidden=false;
@@ -940,19 +1417,25 @@ $('l_form').addEventListener('submit',async function(ev){
   var h=$('l_horas').value.trim().replace(',','.');
   var horas=h===''?null:Number(h);
   if(horas!==null&&!(horas>=0)){$('l_msg').textContent='O tempo tem de ser um número de horas, por exemplo 1,5.';return}
+  var plist=readParts();
   var e={
     id:editing?editing.id:newId(),
     criado:editing?(editing.criado||Date.now()):Date.now(),
     data:$('l_data').value||todayStr(),
     tipo:$('l_tipo').value,equip:equip,desc:desc,
-    pecas:$('l_pecas').value.trim(),horas:horas,
-    estado:$('l_estado').value,tecnico:$('l_tec').value.trim()
+    pecas:partsText(plist),pecasLista:plist,horas:horas,
+    estado:$('l_estado').value,tecnico:$('l_tec').value.trim(),
+    emp:$('l_emp').value.trim(),seg:$('l_seg').value.trim()
   };
+  e.num=(editing&&editing.num)?editing.num:nextNum(e.criado);
+  try{localStorage.setItem('bancada.emp',e.emp)}catch(x){}
   var wasEdit=!!editing;
   $('l_save').disabled=true;
-  await putEntry(e);
+  var saved=await putEntry(e);
   $('l_save').disabled=false;
+  if(saved===false)return;
   resetForm();
+  showReport(e);
   $('l_msg').textContent=wasEdit?'Alterações guardadas.':'Registo guardado.';
   setTimeout(function(){$('l_msg').textContent=''},3000);
 });
@@ -974,40 +1457,53 @@ $('bk_res').addEventListener('click',async function(){
   var good=arr.filter(function(e){return e&&typeof e.id==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(e.id)&&typeof e.equip==='string'&&typeof e.desc==='string'});
   for(var i=0;i<good.length;i++){
     var e=good[i];
-    await putEntry({id:e.id,criado:Number(e.criado)||Date.now(),data:String(e.data||todayStr()),tipo:String(e.tipo||'Reparação'),equip:e.equip,desc:e.desc,pecas:String(e.pecas||''),horas:e.horas==null?null:Number(e.horas),estado:String(e.estado||'Concluído'),tecnico:String(e.tecnico||'')});
+    var r={id:e.id,criado:Number(e.criado)||Date.now(),data:String(e.data||todayStr()),tipo:String(e.tipo||'Reparação'),equip:e.equip,desc:e.desc,pecas:String(e.pecas||''),horas:e.horas==null?null:Number(e.horas),estado:String(e.estado||'Concluído'),tecnico:String(e.tecnico||''),classe:String(e.classe||''),emp:String(e.emp||''),seg:String(e.seg||''),num:String(e.num||'')};
+    if(Array.isArray(e.pecasLista))r.pecasLista=e.pecasLista.map(function(p){return{n:String(p.n||''),q:String(p.q||''),o:String(p.o||'')}});
+    await putEntry(r);
   }
   msg.textContent=good.length+' registos restaurados.';
 });
 
-/* arranque: primeiro o aparelho, depois a conta, se estiver disponível */
+$('pv_close').addEventListener('click',closePreview);
+$('l_addpart').addEventListener('click',function(){addPartRow().querySelector('.pn').focus()});
+/* conta: entrar, criar conta, sair */
+$('a_form').addEventListener('submit',async function(ev){
+  ev.preventDefault();
+  var em=$('a_email').value.trim(),pw=$('a_pass').value;
+  if(!em||!pw){authMsg('Preenche o email e a palavra-passe.');return}
+  authMsg('A entrar…');
+  var r=await sb.auth.signInWithPassword({email:em,password:pw});
+  if(r.error){
+    authMsg(/confirm/i.test(r.error.message)?'Falta confirmar o email. Abre a mensagem que te enviámos e carrega no link.':'Não foi possível entrar. Confirma o email e a palavra-passe.');
+    return;
+  }
+  $('a_pass').value='';authMsg('');
+});
+$('a_signup').addEventListener('click',async function(){
+  var em=$('a_email').value.trim(),pw=$('a_pass').value;
+  if(!em||!pw){authMsg('Preenche o email e a palavra-passe.');return}
+  if(pw.length<6){authMsg('A palavra-passe precisa de pelo menos 6 caracteres.');return}
+  authMsg('A criar a conta…');
+  var r=await sb.auth.signUp({email:em,password:pw,options:{emailRedirectTo:location.origin+location.pathname}});
+  if(r.error){authMsg('Não foi possível criar a conta: '+r.error.message);return}
+  if(!r.data||!r.data.session)authMsg('Enviámos um email de confirmação para '+em+'. Abre-o, carrega no link e depois entra aqui.');
+  else authMsg('');
+  $('a_pass').value='';
+});
+$('a_logout').addEventListener('click',async function(){await sb.auth.signOut()});
+
+/* arranque: primeiro o aparelho, depois a conta, se a base de dados estiver configurada */
 resetForm();
 entries=loadLocal();
-setStatus('local');
-renderLog();
-(async function initCloud(){
+if(window.supabase&&/^https:\/\//.test(SUPABASE_URL)&&SUPABASE_KEY.length>20&&SUPABASE_KEY.indexOf('COLOCA')<0){
   try{
-    if(!window.claude||!window.claude.use)return;
-    var db=await window.claude.use('db'),user=await window.claude.use('user');
-    if(!db||!user)return;
-    var uid=await user.id();
-    if(!uid)return;
-    var local=loadLocal();
-    var col=db.collection('data/users/'+uid);
-    cloud={col:col};
-    try{migrated=localStorage.getItem(KEY+'.migrado')==='1'}catch(e){}
-    unsub=col.onSnapshot(function(snap){
-      if(snap.metadata&&snap.metadata.fromCache&&snap.empty)return;
-      entries=snap.docs.map(function(d){return Object.assign({},d.data())});
-      setStatus('cloud');
-      renderLog();
-      if(snap.empty&&local.length&&!migrated){
-        migrated=true;
-        try{localStorage.setItem(KEY+'.migrado','1')}catch(e){}
-        local.reduce(function(chain,e){return chain.then(function(){return col.doc(e.id).set(e)})},Promise.resolve()).catch(function(){});
-      }
-    },function(){dropCloud()});
-  }catch(e){cloud=null}
-})();
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+    sb.auth.onAuthStateChange(function(ev,session){
+      if(['INITIAL_SESSION','SIGNED_IN','SIGNED_OUT','USER_UPDATED'].indexOf(ev)>=0)setTimeout(function(){onSession(session)},0);
+    });
+  }catch(e){sb=null}
+}
+showAuth();setStatus();renderLog();
 })();
 </script>
 
